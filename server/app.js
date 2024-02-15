@@ -6,8 +6,6 @@ import mongoose from 'mongoose';
 import passport from 'passport';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import login from './middleware/login.js';
-import isAuthenticated from './middleware/auth.js';
 import leaderboard_route from "./routes/leaderboard-route.js"
 dotenv.config();
 mongoose.connect(process.env.MONGO_URI);
@@ -25,7 +23,6 @@ app.use("/leaderboard", leaderboard_route);
 app.route('/').get((req, res) =>{
     res.send("Welcome");
 })
-app.post("/login", login);
 
 
 app.listen(process.env.PORT);
