@@ -1,10 +1,10 @@
 import React from 'react';
-import Sketch from './Sketch';
+import P5Sketch from './P5Sketch';
 
 function App() {
   return (
       <div style={{ width: '99vw', height: '99vh' }}>
-        <Sketch />
+        <P5Sketch />
       </div>
   );
 }
