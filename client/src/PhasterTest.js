@@ -3,24 +3,37 @@ import Phaser from 'phaser';
 
 let game;
 class Example extends Phaser.Scene {
+    constructor() {
+        super({
+            physics: {
+                arcade: {
+                    debug: true,
+                }
+            }
+        });
+
+        // Initialize enemies and block as class properties
+        this.block = this.projectiles = this.enemies = null;
+    }
+
     preload() {
         this.load.image('block', 'assets/sprites/block.png');
         this.load.image('projectile', 'assets/sprites/projectile.png');
     }
 
     create() {
-        const block = this.physics.add.image(400, 300, 'block').setCollideWorldBounds(true);
-        const projectiles = this.physics.add.group();
-
+        this.block = this.physics.add.sprite(400, 300, 'block').setCollideWorldBounds(true);
+        this.projectiles = this.physics.add.group();
+        this.enemies = this.physics.add.group();
         // Define keyboard cursors
         const cursors = this.input.keyboard.createCursorKeys();
 
         this.input.on('pointerdown', (pointer) => {
-            const projectile = projectiles.create(block.x, block.y, 'projectile');
+            const projectile = this.projectiles.create(this.block.x, this.block.y, 'projectile');
 
             // Calculate direction towards the mouse pointer
-            const angle = Phaser.Math.Angle.Between(block.x, block.y, pointer.worldX, pointer.worldY);
-            const velocity = new Phaser.Math.Vector2(pointer.worldX - block.x, pointer.worldY - block.y).normalize().scale(400);
+            const angle = Phaser.Math.Angle.Between(this.block.x, this.block.y, pointer.worldX, pointer.worldY);
+            const velocity = new Phaser.Math.Vector2(pointer.worldX - this.block.x, pointer.worldY - this.block.y).normalize().scale(400);
 
             // Set velocity for the projectile
             projectile.setVelocity(velocity.x, velocity.y);
@@ -38,19 +51,26 @@ class Example extends Phaser.Scene {
         this.input.keyboard.on('keydown', (event) => {
             const speed = 200;
             if(event.key === "w")
-                block.setVelocityY(-speed);
+                this.block.setVelocityY(-speed);
             if(event.key === "s")
-                block.setVelocityY(speed);
+                this.block.setVelocityY(speed);
             if(event.key === "a")
-                block.setVelocityX(-speed);
+                this.block.setVelocityX(-speed);
             if(event.key === "d")
-                block.setVelocityX(speed);
+                this.block.setVelocityX(speed);
         });
 
         // Stop the sprite when the key is released
         this.input.keyboard.on('keyup', () => {
-            block.setVelocity(0);
+            this.block.setVelocity(0);
         });
+        const numEnemies = 10; // Change this to the desired number of enemies
+        for (let i = 0; i < numEnemies; i++) {
+            const x = Phaser.Math.Between(0, this.physics.world.bounds.width);
+            const y = Phaser.Math.Between(0, this.physics.world.bounds.height);
+            const enemy = this.enemies.create(x, y, 'enemy');
+            enemy.setCollideWorldBounds(true);
+        }
     }
 }
 
