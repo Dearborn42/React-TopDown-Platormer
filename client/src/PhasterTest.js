@@ -50,14 +50,10 @@ class Example extends Phaser.Scene {
         // Set velocity based on keyboard input
         this.input.keyboard.on('keydown', (event) => {
             const speed = 200;
-            if(event.key === "w")
-                this.block.setVelocityY(-speed);
-            if(event.key === "s")
-                this.block.setVelocityY(speed);
-            if(event.key === "a")
-                this.block.setVelocityX(-speed);
-            if(event.key === "d")
-                this.block.setVelocityX(speed);
+            if(event.key === "w")this.block.setVelocityY(-speed);
+            if(event.key === "s")this.block.setVelocityY(speed);
+            if(event.key === "a")this.block.setVelocityX(-speed);
+            if(event.key === "d")this.block.setVelocityX(speed);
         });
 
         // Stop the sprite when the key is released
@@ -71,6 +67,14 @@ class Example extends Phaser.Scene {
             const enemy = this.enemies.create(x, y, 'enemy');
             enemy.setCollideWorldBounds(true);
         }
+    }
+    update(time, delta){
+        this.enemies.children.iterate(enemy => {
+            const speed = 150;
+            const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.block.x, this.block.y);
+            const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize().scale(150);
+            enemy.setVelocity(velocity.x, velocity.y);
+        });
     }
 }
 
