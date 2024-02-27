@@ -41,11 +41,8 @@ function PhaserTest({round, enemies}) {
             this.input.on('pointerdown', (pointer) => {
                 const projectile = this.projectiles.create(this.block.x, this.block.y, 'projectile');
 
-                // Calculate direction towards the mouse pointer
-                // const angle = Phaser.Math.Angle.Between(this.block.x, this.block.y, pointer.worldX, pointer.worldY);
                 const velocity = new Phaser.Math.Vector2(pointer.worldX - this.block.x, pointer.worldY - this.block.y).normalize().scale(400);
 
-                // Set velocity for the projectile
                 projectile.setVelocity(velocity.x, velocity.y);
             });
             this.physics.world.setBoundsCollision(true, true, true, true);
