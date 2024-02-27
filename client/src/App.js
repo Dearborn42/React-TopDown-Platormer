@@ -3,7 +3,7 @@ import PhaserTest from './PhasterTest';
 
 function App() {
   const [round, setRound] = useState(1);
-  const [enemies, setEnemies] = useState(5);
+  const [enemies, setEnemies] = useState(30);
   return (
       // // <div style={{ width: '99vw', height: '99vh' }}>
       //   {/* <P5Sketch /> */}

@@ -18,6 +18,7 @@ function PhaserTest({round, enemies}) {
                 round,
                 numOfEnemies: enemies
             }
+            this.currentWave = 1;
         }
 
         preload() {
@@ -33,7 +34,9 @@ function PhaserTest({round, enemies}) {
             this.block.customData = {
                 health: 100,
                 speed: 1.5,
-                score: 0
+                score: 0,
+                level: 1,
+                exp: 0
             };
             // Define keyboard cursors
             // const cursors = this.input.keyboard.createCursorKeys();
@@ -44,6 +47,7 @@ function PhaserTest({round, enemies}) {
                 const velocity = new Phaser.Math.Vector2(pointer.worldX - this.block.x, pointer.worldY - this.block.y).normalize().scale(400);
 
                 projectile.setVelocity(velocity.x, velocity.y);
+                projectile.customData = {damage: 25*this.block.customData.level}
             });
             this.physics.world.setBoundsCollision(true, true, true, true);
 
@@ -55,16 +59,61 @@ function PhaserTest({round, enemies}) {
             });
 
             for (let i = 0; i < this.gameInfo.numOfEnemies; i++) {
-                const x = Phaser.Math.Between(0, this.physics.world.bounds.width);
-                const y = Phaser.Math.Between(0, this.physics.world.bounds.height);
+                const x = Phaser.Math.Between(this.physics.world.bounds.left - 1000, this.physics.world.bounds.right + 1000);
+                const y = Phaser.Math.Between(-200, this.physics.world.bounds.height + 200);
                 const enemy = this.enemies.create(x, y, 'enemy');
-                enemy.setCollideWorldBounds(true);
+                enemy.setCollideWorldBounds(false);
+                if(i <= 15)
+                    enemy.customData = {health: 75, speed: 250, damage: 30, exp: 20}
+                else if(i > 15 && i <=25)
+                    enemy.customData = {health: 125, speed: 200, damage: 50, exp: 50}
+                else
+                    enemy.customData = {health: 200, speed: 100, damage: 75, exp: 100}
+            }
+            this.physics.add.collider(this.projectiles, this.enemies, this.projectileEnemyCollision, null, this);
+            this.startNewWave();
+        }
+        startNewWave() {
+            // Calculate number of enemies for the current wave
+            const numOfEnemies = Math.ceil(this.gameInfo.numOfEnemies * Math.pow(1.5, this.currentWave - 1));
+            console.log(numOfEnemies);
+            // Create enemies for the current wave
+            for (let i = 0; i < numOfEnemies; i++) {
+                const x = Phaser.Math.Between(this.physics.world.bounds.left - 1000, this.physics.world.bounds.right + 1000);
+                const y = Phaser.Math.Between(-200, this.physics.world.bounds.height + 200);
+                const enemy = this.enemies.create(x, y, 'enemy');
+                enemy.setCollideWorldBounds(false);
+                // Set custom data for different types of enemies
+                if (i <= 15)
+                    enemy.customData = { health: 75, speed: 250, damage: 30, exp: 20 };
+                else if (i > 15 && i <= 25)
+                    enemy.customData = { health: 125, speed: 200, damage: 50, exp: 50 };
+                else
+                    enemy.customData = { health: 200, speed: 100, damage: 75, exp: 100 };
+            }
+        }
+        projectileEnemyCollision(projectile, enemy) {
+            projectile.destroy(); // Destroy the projectile
+            enemy.customData.health -= projectile.customData.damage; // Reduce enemy health
+            if (enemy.customData.health <= 0) {
+                enemy.destroy();
+                this.block.customData.exp += enemy.customData.exp;
+                if (this.block.customData.exp >= (100*this.block.customData.level)) {
+                    const remainingExp = this.block.customData.exp - (100*this.block.customData.level);
+                    this.block.customData.level++; // Increase player level
+                    this.block.customData.exp = remainingExp; // Update exp with remaining exp
+                }
+                if (this.enemies.getChildren().length === 0) {
+                    // Start a new wave
+                    this.currentWave++;
+                    this.startNewWave();
+                }
             }
         }
         update(time, delta){
             this.enemies.children.iterate(enemy => {
                 const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.block.x, this.block.y);
-                const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize().scale(150);
+                const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize().scale(enemy.customData.speed);
                 enemy.setVelocity(velocity.x, velocity.y);
             });
 
@@ -92,7 +141,7 @@ function PhaserTest({round, enemies}) {
     };
     useEffect(() => {
         new Phaser.Game(config);
-    }, []);
+    }, [enemies]);
 
     return <div id="phaser-game" />;
 }
