@@ -45,6 +45,7 @@ function PhaserTest() {
         score: 0,
         level: 1,
         exp: 0,
+        pierce: 2
       };
       // Define keyboard cursors
       // const cursors = this.input.keyboard.createCursorKeys();
@@ -66,7 +67,7 @@ function PhaserTest() {
           projectile.setVelocity(velocity.x, velocity.y);
           projectile.customData = {
             damage: 75 * this.block.customData.level,
-            pierce: 2,
+            pierce: this.block.customData.pierce,
           };
       });
       this.physics.world.setBoundsCollision(true, true, true, true);
@@ -162,7 +163,7 @@ function PhaserTest() {
     upgradePlayer(option){
       if(option === "speed")this.block.customData.speed += .1;
       if(option === "health")this.block.customData.health += 10;
-      if(option === "test")this.block.customData.score += 1;
+      if(option === "pierce")this.block.customData.pierce += 1;
       this.scene.resume();
       setPaused(false);
     }
@@ -235,7 +236,7 @@ function PhaserTest() {
       {paused ? (<div>
         <button onClick={() => upgradePlayer("speed")}>Speed</button>
         <button onClick={() => upgradePlayer("health")}>Health</button>
-        <button onClick={() => upgradePlayer("test")}>Test</button>
+        <button onClick={() => upgradePlayer("pierce")}>Pierce</button>
       </div>) : null}
     </div>
   );
