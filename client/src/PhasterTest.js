@@ -37,9 +37,7 @@ function PhaserTest() {
     }
 
     create() {
-      this.block = this.physics.add
-        .sprite(400, 300, 'block')
-        .setCollideWorldBounds(true);
+      this.block = this.physics.add.sprite(400, 300, 'block').setCollideWorldBounds(true);
       this.projectiles = this.physics.add.group();
       this.enemies = this.physics.add.group();
 
@@ -53,12 +51,12 @@ function PhaserTest() {
         pierce: 2,
         regen: 2,
       };
-      this.healthBarBackground = this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0xe74c3c);
-      this.healthBarBackground.setOrigin(0); // Set origin to center top
-
-      // Create the health bar itself and set its initial position
-      this.healthBar = this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0x2ecc71);
+      this.healthBarBackground = 
+        this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0xe74c3c);
+      this.healthBar = 
+        this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0x2ecc71);
       this.healthBar.setOrigin(0);
+      this.healthBarBackground.setOrigin(0);
 
       this.input.on('pointerdown', (pointer) => {
           const projectile = this.projectiles.create(
