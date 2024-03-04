@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Phaser from 'phaser';
+import player from "./images/player.png";
+import eBasic from "./images/enemyBasic.png";
+import eTank from "./images/enemyTank.png";
 
 function PhaserTest() {
   const [paused, setPaused] = useState(false);
@@ -24,8 +27,9 @@ function PhaserTest() {
     }
 
     preload() {
-      this.load.image('block', 'assets/sprites/block.png');
+      this.load.image('block', player);
       this.load.image('projectile', 'assets/sprites/projectile.png');
+      this.load.image('enemy', eBasic);
     }
 
     create() {
