@@ -24,6 +24,10 @@ function PhaserTest() {
         numOfEnemies: 1,
       };
       this.currentWave = 1;
+      this.healthBarBackground = null;
+      this.healthBar = null;
+      this.timedEvent = null;
+      this.iframe = false;
     }
 
     preload() {
@@ -41,14 +45,20 @@ function PhaserTest() {
 
       this.block.customData = {
         health: 100,
+        maxHealth: 100,
         speed: 1.5,
         score: 0,
         level: 1,
         exp: 0,
-        pierce: 2
+        pierce: 2,
+        regen: 2,
       };
-      // Define keyboard cursors
-      // const cursors = this.input.keyboard.createCursorKeys();
+      this.healthBarBackground = this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0xe74c3c);
+      this.healthBarBackground.setOrigin(0); // Set origin to center top
+
+      // Create the health bar itself and set its initial position
+      this.healthBar = this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0x2ecc71);
+      this.healthBar.setOrigin(0);
 
       this.input.on('pointerdown', (pointer) => {
           const projectile = this.projectiles.create(
@@ -80,16 +90,27 @@ function PhaserTest() {
       });
 
       for (let i = 0; i < this.gameInfo.numOfEnemies; i++) {
-        const x = Phaser.Math.Between(
-          this.physics.world.bounds.left - 1000,
-          this.physics.world.bounds.right + 1000
+        const xL = Phaser.Math.Between(
+          this.physics.world.bounds.left - 10000,
+          this.physics.world.bounds.left - 5000
         );
-        const y = Phaser.Math.Between(
-          -200,
-          this.physics.world.bounds.height + 200
+        const xR = Phaser.Math.Between(
+          this.physics.world.bounds.right + 10000,
+          this.physics.world.bounds.right + 5000
         );
-        const enemy = this.enemies.create(x, y, 'enemy');
+        const yT = Phaser.Math.Between(
+          -10000,
+          -5000
+        );
+        const yB = Phaser.Math.Between(
+          this.physics.world.bounds.height + 5000,
+          this.physics.world.bounds.height + 10000
+        );
+        const spawn = Math.round(Math.random(0, 1));
+        const spawn2 = Math.round(Math.random(0, 1));
+        const enemy = this.enemies.create(spawn ? xR : xL, spawn2 ? yT : yB, 'enemy');
         enemy.setCollideWorldBounds(false);
+        console.log(enemy.x, enemy.y)
         if (i <= 15)
           enemy.customData = { health: 75, speed: 250, damage: 30, exp: 20 };
         else if (i > 15 && i <= 25)
@@ -104,6 +125,13 @@ function PhaserTest() {
         null,
         this
       );
+      this.physics.add.collider(
+        this.block,
+        this.enemies,
+        this.enemyPlayerCollision,
+        null,
+        this
+      )
       this.startNewWave();
     }
     startNewWave() {
@@ -133,6 +161,10 @@ function PhaserTest() {
           enemy.customData = { health: 200, speed: 100, damage: 75, exp: 100 };
       }
     }
+    updateHealthBar(currentHealth, maxHealth) {
+        const newWidth = (currentHealth / maxHealth) * 200;
+        this.healthBar.setSize(newWidth, 20);
+    }
     projectileEnemyCollision(projectile, enemy) {
       projectile.customData.pierce--;
       if (projectile.customData.pierce === 0) {
@@ -160,14 +192,45 @@ function PhaserTest() {
         }
       }
     }
+    checkCollisions() {
+        this.physics.collide(
+            this.projectiles,
+            this.enemies,
+            this.enemyPlayerCollision,
+            null,
+            this
+        );
+    }
+    iframeChange(){
+      this.iframe = !this.iframe;
+    }
+    enemyPlayerCollision(block, enemy){
+      if(!this.iframe){
+        this.iframeChange();
+        if(block.customData.health> 0){
+          block.customData.health -= enemy.customData.damage;
+        }
+        else if(block.customData.health<=0){
+          block.customData.health =0;
+        }
+        this.time.delayedCall(1000, this.iframeChange, [], this);
+      }
+    }
     upgradePlayer(option){
       if(option === "speed")this.block.customData.speed += .1;
-      if(option === "health")this.block.customData.health += 10;
+      if(option === "health")this.block.customData.maxHealth += 10;
       if(option === "pierce")this.block.customData.pierce += 1;
       this.scene.resume();
       setPaused(false);
     }
     update(time, delta) {
+      if(this.block.customData.health < this.block.customData.maxHealth)
+        this.block.customData.health += this.block.customData.regen
+      this.healthBarBackground.x = this.block.x -100;
+      this.healthBarBackground.y = this.block.y - 30;
+      this.healthBar.x = this.block.x -100;
+      this.healthBar.y = this.block.y - 30;
+        this.updateHealthBar(this.block.customData.health, 100);
         this.enemies.children.iterate((enemy) => {
           const angle = Phaser.Math.Angle.Between(
             enemy.x,
@@ -209,8 +272,8 @@ function PhaserTest() {
 
   const config = {
     type: Phaser.AUTO,
-    width: window.innerHeight,
-    height: window.innerWidth,
+    width: window.innerWidth,
+    height: window.innerHeight,
     parent: 'phaser-example',
     physics: {
       default: 'arcade',
