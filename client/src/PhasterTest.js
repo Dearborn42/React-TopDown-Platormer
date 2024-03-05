@@ -80,11 +80,11 @@ function PhaserTest() {
         score: 0,
         level: 1,
         exp: 0,
-        nextExp: 100 * this.level,
         pierce: 2,
         regen: 2,
         currentWeapon: 0,
       };
+      this.nextExp = 100 * this.block.customData.level
       this.healthBarBackground = this.add.rectangle(
         this.block.x,
         this.block.y + 40,
@@ -105,14 +105,14 @@ function PhaserTest() {
         this.game.config.width,
         20,
         0x333333
-      ).setOrigin(0);
+      ).setOrigin(0, 1);
       this.expBar = this.add.rectangle(
           0,
           this.game.config.height - 20,
           this.game.config.width,
           20, 
           0xffd700
-      ).setOrigin(0);   
+      ).setOrigin(0, 1);   
       this.healthBar.setOrigin(0);
       this.healthBarBackground.setOrigin(0);
 
@@ -321,6 +321,7 @@ function PhaserTest() {
             const remainingExp =
               this.block.customData.exp - 100 * this.block.customData.level;
             this.block.customData.level++;
+            this.nextExp = 100 * this.block.customData.level
             this.block.customData.exp = remainingExp; // Update exp with remaining exp
             console.log('Level: ' + level);
             this.scene.pause();
@@ -400,6 +401,7 @@ function PhaserTest() {
             const remainingExp =
               this.block.customData.exp - 100 * this.block.customData.level;
             this.block.customData.level++;
+            this.nextExp = 100 * this.block.customData.level
             this.block.customData.exp = remainingExp; // Update exp with remaining exp
             console.log('Level: ' + level);
             this.scene.pause();
@@ -415,11 +417,12 @@ function PhaserTest() {
     }
     updateExpBar(currentExp, nextExp) {
         const newWidth = (currentExp / nextExp) * this.game.config.width;
-        console.log(this.block.customData.exp/this.block.customData.nextExp)
+        console.log(currentExp, nextExp)
+        console.log(newWidth)
         this.expBar.setSize(newWidth, 20);
     }
     update(time, delta) {
-      this.updateExpBar(this.block.customData.exp, this.block.customData.nextExp);
+      this.updateExpBar(this.block.customData.exp, this.nextExp);
       if (this.block.customData.health < this.block.customData.maxHealth){
         if(!this.healthRegenRate){
           this.changeHealthRegen();
