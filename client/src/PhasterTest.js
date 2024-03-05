@@ -30,6 +30,7 @@ function PhaserTest() {
       this.timedEvent = null;
       this.iframe = false;
       this.fireRateForWepaon = false;
+      this.healthRegenRate = false;
       this.weapon0 = {
         fireRate: 1000,
         damage: 75,
@@ -84,18 +85,34 @@ function PhaserTest() {
       };
       this.healthBarBackground = this.add.rectangle(
         this.block.x - 100,
-        this.block.y - 30,
-        200,
-        20,
+        this.block.y - 40,
+        100,
+        5,
         0xe74c3c
       );
       this.healthBar = this.add.rectangle(
         this.block.x - 100,
-        this.block.y - 30,
-        200,
-        20,
+        this.block.y - 40,
+        100,
+        5,
         0x2ecc71
       );
+      this.expBarBackground = this.add.rectangle(
+        this.game.config.width / 2, 
+        this.game.config.height - 20,
+        200,
+        20,
+        0x333333
+      ).setOrigin(0.5); 
+
+      // Experience bar
+      this.expBar = this.add.rectangle(
+          this.game.config.width / 2 - 100,
+          this.game.config.height - 20,
+          0,
+          20, 
+          0xffd700
+      ).setOrigin(0, 0.5);   
       this.healthBar.setOrigin(0);
       this.healthBarBackground.setOrigin(0);
 
@@ -149,7 +166,6 @@ function PhaserTest() {
             for (let i = 0; i < this.weapon2.shots; i++) {
                 spreadAngles.push((i - (this.weapon2.shots - 1) / 2) * 0.1); // Adjust spread angle here
             }
-            console.log(spreadAngles);
             // Iterate over each spread angle
             for (let i = 0; i < spreadAngles.length; i++) {
                 const spreadVelocity = velocity.clone().rotate(spreadAngles[i]);
@@ -222,7 +238,6 @@ function PhaserTest() {
         enemy.setCollideWorldBounds(false);
         enemy.setScale(0.2, 0.2);
 
-        console.log(enemy.x, enemy.y);
         if (i <= 15)
           enemy.customData = { health: 75, speed: 250, damage: 30, exp: 20 };
         else if (i > 15 && i <= 25)
@@ -275,7 +290,7 @@ function PhaserTest() {
     }
     updateHealthBar(currentHealth, maxHealth) {
       const newWidth = (currentHealth / maxHealth) * 200;
-      this.healthBar.setSize(newWidth, 20);
+      this.healthBar.setSize(newWidth, 5);
     }
     projectileEnemyCollision(projectile, enemy) {
       projectile.customData.pierce--;
@@ -357,6 +372,9 @@ function PhaserTest() {
       setPaused(false);
       setLevel((prev) => prev++);
     }
+    changeHealthRegen(){
+      this.healthRegenRate = !this.healthRegenRate
+    }
     destroyProjectileAndApplyAOE(projectile){
       projectile.destroy();
       const enemiesInRange = this.enemies.getChildren().filter((enemy) => {
@@ -385,12 +403,19 @@ function PhaserTest() {
       });
     }
     update(time, delta) {
-      if (this.block.customData.health < this.block.customData.maxHealth)
-        this.block.customData.health += this.block.customData.regen;
+      const expWidth = (this.block.customData.exp / 100 * this.block.customData.level) * 200;
+      this.expBar.setSize(expWidth, 20);
+      if (this.block.customData.health < this.block.customData.maxHealth){
+        if(!this.healthRegenRate){
+          this.changeHealthRegen();
+          this.block.customData.health += this.block.customData.regen;
+          this.time.delayedCall(1000, this.changeHealthRegen, [], this);
+        }
+      }
       this.healthBarBackground.x = this.block.x - 100;
-      this.healthBarBackground.y = this.block.y - 30;
+      this.healthBarBackground.y = this.block.y - 40;
       this.healthBar.x = this.block.x - 100;
-      this.healthBar.y = this.block.y - 30;
+      this.healthBar.y = this.block.y - 40;
         this.updateHealthBar(this.block.customData.health, 100);
         this.enemies.children.iterate((enemy) => {
           const angle = Phaser.Math.Angle.Between(
