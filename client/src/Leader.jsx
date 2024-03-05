@@ -27,16 +27,18 @@ const Leader = () => {
     },[])
   return (
     <div id='lead'>
-        <h1 id='title'>Leaderboard</h1>
         <div>
-            {leaderboard.map((e,i)=>{
+            
+            <h1 id='title'>Welcome to space ship game survivor simulator tycoon rpg defense roguelike</h1>
+            <p>Mouse to move and aim. LMB to shoot.</p>
+            <a href="/game">Start</a>
+        <h1 id='title'>Leaderboard</h1>
+        
+        {leaderboard.map((e,i)=>{
                 return(
                     <h3 key={i}>{i+1}. {e.playerName} - Score: {e.playerScore}</h3>
                 )
             })}
-            <a href="/game">Start</a>
-        <p>Mouse to move and aim. LMB to shoot.</p>
-
         </div>
     </div>
   )
