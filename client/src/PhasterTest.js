@@ -85,14 +85,14 @@ function PhaserTest() {
       };
       this.healthBarBackground = this.add.rectangle(
         this.block.x - 100,
-        this.block.y - 40,
+        this.block.y + 40,
         100,
         5,
         0xe74c3c
       );
       this.healthBar = this.add.rectangle(
         this.block.x - 100,
-        this.block.y - 40,
+        this.block.y + 40,
         100,
         5,
         0x2ecc71
@@ -103,9 +103,7 @@ function PhaserTest() {
         200,
         20,
         0x333333
-      ).setOrigin(0.5); 
-
-      // Experience bar
+      ).setOrigin(0.5);
       this.expBar = this.add.rectangle(
           this.game.config.width / 2 - 100,
           this.game.config.height - 20,
@@ -202,7 +200,7 @@ function PhaserTest() {
             projectile.setCollideWorldBounds(true);
             projectile.body.onWorldBounds = true;
           }
-          this.time.delayedCall(this[`weapon${this.block.customData.currentWeapon}`].fireRate, this.fireRateChange, [], this);
+          this.setFireRate = this.time.delayedCall(this[`weapon${this.block.customData.currentWeapon}`].fireRate, this.fireRateChange, [], this);
         }
       });
       this.physics.world.setBoundsCollision(true, true, true, true);
@@ -413,9 +411,9 @@ function PhaserTest() {
         }
       }
       this.healthBarBackground.x = this.block.x - 100;
-      this.healthBarBackground.y = this.block.y - 40;
+      this.healthBarBackground.y = this.block.y + 40;
       this.healthBar.x = this.block.x - 100;
-      this.healthBar.y = this.block.y - 40;
+      this.healthBar.y = this.block.y + 40;
         this.updateHealthBar(this.block.customData.health, 100);
         this.enemies.children.iterate((enemy) => {
           const angle = Phaser.Math.Angle.Between(
