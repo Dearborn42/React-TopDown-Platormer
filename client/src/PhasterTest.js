@@ -80,6 +80,7 @@ function PhaserTest() {
         score: 0,
         level: 1,
         exp: 0,
+        nextExp: 100 * this.level,
         pierce: 2,
         regen: 2,
         currentWeapon: 0,
@@ -99,19 +100,19 @@ function PhaserTest() {
         0x2ecc71
       );
       this.expBarBackground = this.add.rectangle(
-        this.game.config.width / 2, 
+        0, 
         this.game.config.height - 20,
-        100,
+        this.game.config.width,
         20,
         0x333333
-      ).setOrigin(0.5);
+      ).setOrigin(0);
       this.expBar = this.add.rectangle(
-          this.game.config.width / 2 - 50,
-          this.game.config.height - 20,
           0,
+          this.game.config.height - 20,
+          this.game.config.width,
           20, 
           0xffd700
-      ).setOrigin(0, 0.5);   
+      ).setOrigin(0);   
       this.healthBar.setOrigin(0);
       this.healthBarBackground.setOrigin(0);
 
@@ -215,17 +216,17 @@ function PhaserTest() {
 
       for (let i = 0; i < this.gameInfo.numOfEnemies; i++) {
         const xL = Phaser.Math.Between(
-          this.physics.world.bounds.left - 10000,
-          this.physics.world.bounds.left - 5000
+          this.physics.world.bounds.left - 300,
+          this.physics.world.bounds.left - 100
         );
         const xR = Phaser.Math.Between(
-          this.physics.world.bounds.right + 10000,
-          this.physics.world.bounds.right + 5000
+          this.physics.world.bounds.right + 300,
+          this.physics.world.bounds.right + 100
         );
-        const yT = Phaser.Math.Between(-10000, -5000);
+        const yT = Phaser.Math.Between(-300, -100);
         const yB = Phaser.Math.Between(
-          this.physics.world.bounds.height + 5000,
-          this.physics.world.bounds.height + 10000
+          this.physics.world.bounds.height + 300,
+          this.physics.world.bounds.height + 100
         );
         const spawn = Math.round(Math.random(0, 1));
         const spawn2 = Math.round(Math.random(0, 1));
@@ -267,17 +268,28 @@ function PhaserTest() {
       );
       // Create enemies for the current wave
       for (let i = 0; i < numOfEnemies; i++) {
-        const x = Phaser.Math.Between(
-          this.physics.world.bounds.left - 1000,
-          this.physics.world.bounds.right + 1000
+        const xL = Phaser.Math.Between(
+          this.physics.world.bounds.left - 300,
+          this.physics.world.bounds.left - 100
         );
-        const y = Phaser.Math.Between(
-          -200,
-          this.physics.world.bounds.height + 200
+        const xR = Phaser.Math.Between(
+          this.physics.world.bounds.right + 300,
+          this.physics.world.bounds.right + 100
         );
-        const enemy = this.enemies.create(x, y, 'enemy');
-        enemy.setScale(0.2, 0.2);
+        const yT = Phaser.Math.Between(-300, -100);
+        const yB = Phaser.Math.Between(
+          this.physics.world.bounds.height + 300,
+          this.physics.world.bounds.height + 100
+        );
+        const spawn = Math.round(Math.random(0, 1));
+        const spawn2 = Math.round(Math.random(0, 1));
+        const enemy = this.enemies.create(
+          spawn ? xR : xL,
+          spawn2 ? yT : yB,
+          'enemy'
+        );
         enemy.setCollideWorldBounds(false);
+        enemy.setScale(0.2, 0.2);
         // Set custom data for different types of enemies
         if (i <= 15)
           enemy.customData = { health: 75, speed: 250, damage: 30, exp: 20 };
@@ -357,7 +369,7 @@ function PhaserTest() {
         this[`weapon${this.block.customData.currentWeapon}`].damage +=
         this[`weapon${this.block.customData.currentWeapon}`].damageIncrease;
       if(option === "fire-rate")
-        this[`weapon${this.block.customData.currentWeapon}`].fireRate += 50
+        this[`weapon${this.block.customData.currentWeapon}`].fireRate -= 75
       if(option === "shots")
         this[`weapon${this.block.customData.currentWeapon}`].shots += 1;
       if(option === "aoe")
@@ -401,9 +413,13 @@ function PhaserTest() {
         }
       });
     }
+    updateExpBar(currentExp, nextExp) {
+        const newWidth = (currentExp / nextExp) * this.game.config.width;
+        console.log(this.block.customData.exp/this.block.customData.nextExp)
+        this.expBar.setSize(newWidth, 20);
+    }
     update(time, delta) {
-      const expWidth = (this.block.customData.exp / 100 * this.block.customData.level);
-      this.expBar.setSize(expWidth, 20);
+      this.updateExpBar(this.block.customData.exp, this.block.customData.nextExp);
       if (this.block.customData.health < this.block.customData.maxHealth){
         if(!this.healthRegenRate){
           this.changeHealthRegen();
