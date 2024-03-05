@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Phaser from 'phaser';
-import player from "./images/player.png";
-import eBasic from "./images/enemyBasic.png";
-import eTank from "./images/enemyTank.png";
+import player from './images/player.png';
+import eBasic from './images/enemyBasic.png';
+import eTank from './images/enemyTank.png';
 
 function PhaserTest() {
   const [paused, setPaused] = useState(false);
@@ -34,22 +34,22 @@ function PhaserTest() {
         fireRate: 1000,
         damage: 75,
         pierce: 2,
-      }
+      };
       this.weapon1 = {
         fireRate: 3000,
         damage: 125,
         pierce: 6,
-      }
+      };
       this.weapon2 = {
         fireRate: 1750,
         damage: 50,
         pierce: 1,
-      }
+      };
       this.weapon3 = {
         fireRate: 4000,
         damage: 200,
-        pierce: 5
-      }
+        pierce: 5,
+      };
     }
 
     preload() {
@@ -59,10 +59,12 @@ function PhaserTest() {
     }
 
     create() {
-      this.block = this.physics.add.sprite(400, 300, 'block').setCollideWorldBounds(true);
+      this.block = this.physics.add
+        .sprite(400, 300, 'block')
+        .setCollideWorldBounds(true);
       this.projectiles = this.physics.add.group();
       this.enemies = this.physics.add.group();
-
+      this.block.setScale(0.2, 0.2);
       this.block.customData = {
         health: 100,
         maxHealth: 100,
@@ -74,17 +76,27 @@ function PhaserTest() {
         regen: 2,
         currentWeapon: 0,
       };
-      this.healthBarBackground = 
-        this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0xe74c3c);
-      this.healthBar = 
-        this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0x2ecc71);
+      this.healthBarBackground = this.add.rectangle(
+        this.block.x - 100,
+        this.block.y - 30,
+        200,
+        20,
+        0xe74c3c
+      );
+      this.healthBar = this.add.rectangle(
+        this.block.x - 100,
+        this.block.y - 30,
+        200,
+        20,
+        0x2ecc71
+      );
       this.healthBar.setOrigin(0);
       this.healthBarBackground.setOrigin(0);
 
       this.input.on('pointerdown', (pointer) => {
-        if(!this.fireRateForWepaon){
+        if (!this.fireRateForWepaon) {
           this.fireRateChange();
-          if(this.block.customData.currentWeapon == 0){
+          if (this.block.customData.currentWeapon == 0) {
             const projectile = this.projectiles.create(
               this.block.x,
               this.block.y,
@@ -93,13 +105,16 @@ function PhaserTest() {
             const velocity = new Phaser.Math.Vector2(
               pointer.worldX - this.block.x,
               pointer.worldY - this.block.y
-            ).normalize().scale(400);
+            )
+              .normalize()
+              .scale(400);
             projectile.setVelocity(velocity.x, velocity.y);
-            projectile.customData = this[`weapon${this.block.customData.currentWeapon}`];
+            projectile.customData =
+              this[`weapon${this.block.customData.currentWeapon}`];
             projectile.setCollideWorldBounds(true);
             projectile.body.onWorldBounds = true;
           }
-          if(this.block.customData.currentWeapon == 1){
+          if (this.block.customData.currentWeapon == 1) {
             const projectile = this.projectiles.create(
               this.block.x,
               this.block.y,
@@ -108,13 +123,21 @@ function PhaserTest() {
             const velocity = new Phaser.Math.Vector2(
               pointer.worldX - this.block.x,
               pointer.worldY - this.block.y
-            ).normalize().scale(900);
+            )
+              .normalize()
+              .scale(900);
             projectile.setVelocity(velocity.x, velocity.y);
-            projectile.customData = this[`weapon${this.block.customData.currentWeapon}`];
+            projectile.customData =
+              this[`weapon${this.block.customData.currentWeapon}`];
             projectile.setCollideWorldBounds(true);
             projectile.body.onWorldBounds = true;
           }
-          this.time.delayedCall(this[`weapon${this.block.customData.currentWeapon}`].fireRate, this.fireRateChange, [], this);
+          this.time.delayedCall(
+            this[`weapon${this.block.customData.currentWeapon}`].fireRate,
+            this.fireRateChange,
+            [],
+            this
+          );
         }
       });
       this.physics.world.setBoundsCollision(true, true, true, true);
@@ -135,19 +158,22 @@ function PhaserTest() {
           this.physics.world.bounds.right + 10000,
           this.physics.world.bounds.right + 5000
         );
-        const yT = Phaser.Math.Between(
-          -10000,
-          -5000
-        );
+        const yT = Phaser.Math.Between(-10000, -5000);
         const yB = Phaser.Math.Between(
           this.physics.world.bounds.height + 5000,
           this.physics.world.bounds.height + 10000
         );
         const spawn = Math.round(Math.random(0, 1));
         const spawn2 = Math.round(Math.random(0, 1));
-        const enemy = this.enemies.create(spawn ? xR : xL, spawn2 ? yT : yB, 'enemy');
+        const enemy = this.enemies.create(
+          spawn ? xR : xL,
+          spawn2 ? yT : yB,
+          'enemy'
+        );
         enemy.setCollideWorldBounds(false);
-        console.log(enemy.x, enemy.y)
+        enemy.setScale(0.2, 0.2);
+
+        console.log(enemy.x, enemy.y);
         if (i <= 15)
           enemy.customData = { health: 75, speed: 250, damage: 30, exp: 20 };
         else if (i > 15 && i <= 25)
@@ -168,7 +194,7 @@ function PhaserTest() {
         this.enemyPlayerCollision,
         null,
         this
-      )
+      );
       this.startNewWave();
     }
     startNewWave() {
@@ -187,6 +213,7 @@ function PhaserTest() {
           this.physics.world.bounds.height + 200
         );
         const enemy = this.enemies.create(x, y, 'enemy');
+        enemy.setScale(0.2, 0.2);
         enemy.setCollideWorldBounds(false);
         // Set custom data for different types of enemies
         if (i <= 15)
@@ -198,8 +225,8 @@ function PhaserTest() {
       }
     }
     updateHealthBar(currentHealth, maxHealth) {
-        const newWidth = (currentHealth / maxHealth) * 200;
-        this.healthBar.setSize(newWidth, 20);
+      const newWidth = (currentHealth / maxHealth) * 200;
+      this.healthBar.setSize(newWidth, 20);
     }
     projectileEnemyCollision(projectile, enemy) {
       projectile.customData.pierce--;
@@ -228,98 +255,98 @@ function PhaserTest() {
       }
     }
     checkCollisions() {
-        this.physics.collide(
-            this.projectiles,
-            this.enemies,
-            this.enemyPlayerCollision,
-            null,
-            this
-        );
+      this.physics.collide(
+        this.projectiles,
+        this.enemies,
+        this.enemyPlayerCollision,
+        null,
+        this
+      );
     }
-    iframeChange(){
+    iframeChange() {
       this.iframe = !this.iframe;
     }
-    fireRateChange(){
-      this.fireRateForWepaon = !this.fireRateForWepaon
+    fireRateChange() {
+      this.fireRateForWepaon = !this.fireRateForWepaon;
     }
-    enemyPlayerCollision(block, enemy){
-      if(!this.iframe){
+    enemyPlayerCollision(block, enemy) {
+      if (!this.iframe) {
         this.iframeChange();
-        if(block.customData.health> 0){
+        if (block.customData.health > 0) {
           block.customData.health -= enemy.customData.damage;
-        }
-        else if(block.customData.health<=0){
-          block.customData.health =0;
+        } else if (block.customData.health <= 0) {
+          block.customData.health = 0;
         }
         this.time.delayedCall(500, this.iframeChange, [], this);
       }
     }
-    upgradePlayer(option){
-      if(option === "speed")this.block.customData.speed += .1;
-      if(option === "health")this.block.customData.maxHealth += 10;
-      if(option === "pierce")this.block.customData.pierce += 1;
+    upgradePlayer(option) {
+      if (option === 'speed') this.block.customData.speed += 0.1;
+      if (option === 'health') this.block.customData.maxHealth += 10;
+      if (option === 'pierce') this.block.customData.pierce += 1;
       this.scene.resume();
       setPaused(false);
       setLevel(this.block.customData.level);
       console.log(level);
     }
-    changeWeapon(option){
+    changeWeapon(option) {
       this.block.customData.currentWeapon = option;
       this.scene.resume();
       setPaused(false);
       setLevel((prev) => prev++);
     }
     update(time, delta) {
-      if(this.block.customData.health < this.block.customData.maxHealth)
-        this.block.customData.health += this.block.customData.regen
-      this.healthBarBackground.x = this.block.x -100;
+      if (this.block.customData.health < this.block.customData.maxHealth)
+        this.block.customData.health += this.block.customData.regen;
+      this.healthBarBackground.x = this.block.x - 100;
       this.healthBarBackground.y = this.block.y - 30;
-      this.healthBar.x = this.block.x -100;
+      this.healthBar.x = this.block.x - 100;
       this.healthBar.y = this.block.y - 30;
-        this.updateHealthBar(this.block.customData.health, 100);
-        this.enemies.children.iterate((enemy) => {
-          const angle = Phaser.Math.Angle.Between(
-            enemy.x,
-            enemy.y,
-            this.block.x,
-            this.block.y
-          );
-          const velocity = new Phaser.Math.Vector2(
-            Math.cos(angle),
-            Math.sin(angle)
-          )
-            .normalize()
-            .scale(enemy.customData.speed);
-          enemy.setVelocity(velocity.x, velocity.y);
-        });
-        this.projectiles.children.iterate((projectile) => {
-          if (projectile.body.onWorldBounds) {
-            if (projectile.body.checkWorldBounds()) {
-              projectile.destroy();
-            }
-          }
-        })
-
-        const pointer = this.input.mousePointer;
-        const distance = Phaser.Math.Distance.Between(
-          this.block.x,
-          this.block.y,
-          pointer.worldX,
-          pointer.worldY
-        );
+      this.updateHealthBar(this.block.customData.health, 100);
+      this.enemies.children.iterate((enemy) => {
         const angle = Phaser.Math.Angle.Between(
+          enemy.x,
+          enemy.y,
           this.block.x,
-          this.block.y,
-          pointer.worldX,
-          pointer.worldY
+          this.block.y
         );
-        const velocityX =
-          Math.cos(angle) * distance * this.block.customData.speed;
-        const velocityY =
-          Math.sin(angle) * distance * this.block.customData.speed;
+        const velocity = new Phaser.Math.Vector2(
+          Math.cos(angle),
+          Math.sin(angle)
+        )
+          .normalize()
+          .scale(enemy.customData.speed);
+        enemy.setVelocity(velocity.x, velocity.y);
+      });
+      this.projectiles.children.iterate((projectile) => {
+        if (projectile.body.onWorldBounds) {
+          if (projectile.body.checkWorldBounds()) {
+            projectile.destroy();
+          }
+        }
+      });
 
-        // Set velocity for the block
-        this.block.setVelocity(velocityX, velocityY);
+      const pointer = this.input.mousePointer;
+      const distance = Phaser.Math.Distance.Between(
+        this.block.x,
+        this.block.y,
+        pointer.worldX,
+        pointer.worldY
+      );
+      const angle = Phaser.Math.Angle.Between(
+        this.block.x,
+        this.block.y,
+        pointer.worldX,
+        pointer.worldY
+      );
+      this.block.rotation = angle + Math.PI / 2;
+      const velocityX =
+        Math.cos(angle) * distance * this.block.customData.speed;
+      const velocityY =
+        Math.sin(angle) * distance * this.block.customData.speed;
+
+      // Set velocity for the block
+      this.block.setVelocity(velocityX, velocityY);
     }
   }
 
@@ -341,28 +368,32 @@ function PhaserTest() {
       phaserGame.destroy(true);
     };
   }, []);
-  function upgradePlayer(option){
-    if(game !== null){
+  function upgradePlayer(option) {
+    if (game !== null) {
       game.scene.scenes[0].upgradePlayer(option);
     }
   }
-  function changeWeapon(option){
-    if(game !== null){
+  function changeWeapon(option) {
+    if (game !== null) {
       game.scene.scenes[0].changeWeapon(option);
     }
   }
-  
-   return (
+
+  return (
     <div id='phaser-game'>
-      {paused && game.scene.scenes[0].block.customData.level > 2 ? (<div>
-        <button onClick={() => upgradePlayer("speed")}>Speed</button>
-        <button onClick={() => upgradePlayer("health")}>Health</button>
-        <button onClick={() => upgradePlayer("pierce")}>Pierce</button>
-      </div>) : paused ? (<div>
-        <button onClick={() => changeWeapon(1)}>Sniper</button>
-        <button onClick={() => changeWeapon(2)}>Shotgun</button>
-        <button onClick={() => changeWeapon(3)}>Grenade Launcher</button>
-      </div>): null}
+      {paused && game.scene.scenes[0].block.customData.level > 2 ? (
+        <div>
+          <button onClick={() => upgradePlayer('speed')}>Speed</button>
+          <button onClick={() => upgradePlayer('health')}>Health</button>
+          <button onClick={() => upgradePlayer('pierce')}>Pierce</button>
+        </div>
+      ) : paused ? (
+        <div>
+          <button onClick={() => changeWeapon(1)}>Sniper</button>
+          <button onClick={() => changeWeapon(2)}>Shotgun</button>
+          <button onClick={() => changeWeapon(3)}>Grenade Launcher</button>
+        </div>
+      ) : null}
     </div>
   );
 }
