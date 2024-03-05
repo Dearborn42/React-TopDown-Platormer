@@ -6,3 +6,50 @@ body{
     margin: 0;
     overflow-y: hidden;
 }
+@font-face {
+    font-family: pixel;
+    src: url("./upheavtt.ttf");
+}
+#diff{
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    color: white;
+        font-family: pixel;
+        text-align: center;
+        gap: 1rem;
+        font-size: 2rem;
+}
+#diff button{
+        border: none;
+            padding: .5rem 1rem;
+}
+#phaser-game>div{
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+#phaser-game button{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: none;
+    color: white;
+    font-family: pixel;
+    border: none;
+    text-align: center;
+    font-size: 2rem;
+}
+#phaser-game img{
+    width: 16rem;
+    height: 16rem;
+}

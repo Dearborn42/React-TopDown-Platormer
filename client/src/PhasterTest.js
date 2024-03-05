@@ -566,7 +566,7 @@ function PhaserTest() {
   }
 
   return difficulty === null ? (
-    <div>
+    <div id='diff'>
       <button onClick={() => setDifficulty(1.1)}>Easy</button>
       <button onClick={() => setDifficulty(1.5)}>Medium</button>
       <button onClick={() => setDifficulty(2)}>Hard</button>
@@ -612,7 +612,7 @@ function PhaserTest() {
         <div>
           <button onClick={() => changeWeapon(0)}>
             <img src={normalI} alt='' srcset='' />
-            Keep same weapon
+            Keep weapon
           </button>
           <button onClick={() => changeWeapon(1)}>
             <img src={sniperI} alt='' srcset='' />
@@ -624,7 +624,7 @@ function PhaserTest() {
           </button>
           <button onClick={() => changeWeapon(3)}>
             <img src={grenadeI} alt='' srcset='' />
-            Grenade Launcher
+            Grenades
           </button>
         </div>
       ) : null}
