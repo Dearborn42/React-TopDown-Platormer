@@ -5,6 +5,7 @@ import eBasic from './images/enemyBasic.png';
 import eTank from './images/enemyTank.png';
 
 function PhaserTest() {
+  const [difficulty, setDifficulty] = useState(null);
   const [paused, setPaused] = useState(false);
   const [game, setGame] = useState(null);
   const [level, setLevel] = useState(1);
@@ -84,14 +85,14 @@ function PhaserTest() {
         currentWeapon: 0,
       };
       this.healthBarBackground = this.add.rectangle(
-        this.block.x - 100,
+        this.block.x,
         this.block.y + 40,
         100,
         5,
         0xe74c3c
       );
       this.healthBar = this.add.rectangle(
-        this.block.x - 100,
+        this.block.x,
         this.block.y + 40,
         100,
         5,
@@ -100,12 +101,12 @@ function PhaserTest() {
       this.expBarBackground = this.add.rectangle(
         this.game.config.width / 2, 
         this.game.config.height - 20,
-        200,
+        100,
         20,
         0x333333
       ).setOrigin(0.5);
       this.expBar = this.add.rectangle(
-          this.game.config.width / 2 - 100,
+          this.game.config.width / 2 - 50,
           this.game.config.height - 20,
           0,
           20, 
@@ -262,7 +263,7 @@ function PhaserTest() {
     startNewWave() {
       // Calculate number of enemies for the current wave
       const numOfEnemies = Math.ceil(
-        this.gameInfo.numOfEnemies * Math.pow(1.5, this.currentWave - 1)
+        this.gameInfo.numOfEnemies * Math.pow(difficulty, this.currentWave - 1)
       );
       // Create enemies for the current wave
       for (let i = 0; i < numOfEnemies; i++) {
@@ -287,7 +288,7 @@ function PhaserTest() {
       }
     }
     updateHealthBar(currentHealth, maxHealth) {
-      const newWidth = (currentHealth / maxHealth) * 200;
+      const newWidth = (currentHealth / maxHealth) * 100;
       this.healthBar.setSize(newWidth, 5);
     }
     projectileEnemyCollision(projectile, enemy) {
@@ -401,7 +402,7 @@ function PhaserTest() {
       });
     }
     update(time, delta) {
-      const expWidth = (this.block.customData.exp / 100 * this.block.customData.level) * 200;
+      const expWidth = (this.block.customData.exp / 100 * this.block.customData.level);
       this.expBar.setSize(expWidth, 20);
       if (this.block.customData.health < this.block.customData.maxHealth){
         if(!this.healthRegenRate){
@@ -410,9 +411,9 @@ function PhaserTest() {
           this.time.delayedCall(1000, this.changeHealthRegen, [], this);
         }
       }
-      this.healthBarBackground.x = this.block.x - 100;
+      this.healthBarBackground.x = this.block.x-50;
       this.healthBarBackground.y = this.block.y + 40;
-      this.healthBar.x = this.block.x - 100;
+      this.healthBar.x = this.block.x-50;
       this.healthBar.y = this.block.y + 40;
         this.updateHealthBar(this.block.customData.health, 100);
         this.enemies.children.iterate((enemy) => {
@@ -493,12 +494,14 @@ function PhaserTest() {
     scene: Example,
   };
   useEffect(() => {
-    const phaserGame = new Phaser.Game(config);
-    setGame(phaserGame);
-    return () => {
-      phaserGame.destroy(true);
-    };
-  }, []);
+    if(difficulty !== null){
+      const phaserGame = new Phaser.Game(config);
+      setGame(phaserGame);
+      return () => {
+        phaserGame.destroy(true);
+      };
+    }
+  }, [difficulty]);
   function upgradePlayer(option) {
     if (game !== null) {
       game.scene.scenes[0].upgradePlayer(option);
@@ -511,25 +514,31 @@ function PhaserTest() {
   }
 
   return (
-    <div id='phaser-game'>
-      {paused && game.scene.scenes[0].block.customData.level > 2 ? (<div>
-        <button onClick={() => upgradePlayer("speed")}>Speed</button>
-        <button onClick={() => upgradePlayer("health")}>Health</button>
-        <button onClick={() => upgradePlayer("damage")}>Damage</button>
-        {game.scene.scenes[0].block.customData.currentWeapon <= 1 ? 
-          (<button onClick={() => upgradePlayer("pierce")}>Pierce</button>) :
-          game.scene.scenes[0].block.customData.currentWeapon === 2 ? 
-          (<button onClick={() => upgradePlayer("shots")}>Shots</button>) : 
-          (<button onClick={() => upgradePlayer("aoe")}>Blast radius</button>)
-        }
-        <button onClick={() => upgradePlayer("fire-rate")}>Fire rate</button>
-      </div>) : paused ? (<div>
-        <button onClick={() => changeWeapon(0)}>Keep same weapon</button>
-        <button onClick={() => changeWeapon(1)}>Sniper</button>
-        <button onClick={() => changeWeapon(2)}>Shotgun</button>
-        <button onClick={() => changeWeapon(3)}>Grenade Launcher</button>
-      </div>): null}
-    </div>
+      difficulty === null ? (<div>
+        <button onClick={() => setDifficulty(1.1)}>Easy</button>
+        <button onClick={() => setDifficulty(1.5)}>Medium</button>
+        <button onClick={() => setDifficulty(2)}>Hard</button>
+      </div>): (
+        <div id='phaser-game'>
+        {paused && game.scene.scenes[0].block.customData.level > 2 ? (<div>
+          <button onClick={() => upgradePlayer("speed")}>Speed</button>
+          <button onClick={() => upgradePlayer("health")}>Health</button>
+          <button onClick={() => upgradePlayer("damage")}>Damage</button>
+          {game.scene.scenes[0].block.customData.currentWeapon <= 1 ? 
+            (<button onClick={() => upgradePlayer("pierce")}>Pierce</button>) :
+            game.scene.scenes[0].block.customData.currentWeapon === 2 ? 
+            (<button onClick={() => upgradePlayer("shots")}>Shots</button>) : 
+            (<button onClick={() => upgradePlayer("aoe")}>Blast radius</button>)
+          }
+          <button onClick={() => upgradePlayer("fire-rate")}>Fire rate</button>
+        </div>) : paused ? (<div>
+          <button onClick={() => changeWeapon(0)}>Keep same weapon</button>
+          <button onClick={() => changeWeapon(1)}>Sniper</button>
+          <button onClick={() => changeWeapon(2)}>Shotgun</button>
+          <button onClick={() => changeWeapon(3)}>Grenade Launcher</button>
+        </div>): null}
+        </div>
+      )
   );
 }
 
