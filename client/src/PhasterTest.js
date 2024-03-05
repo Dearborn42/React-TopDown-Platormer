@@ -34,21 +34,26 @@ function PhaserTest() {
         fireRate: 1000,
         damage: 75,
         pierce: 2,
+        damageIncrease: 35,
       }
       this.weapon1 = {
         fireRate: 3000,
         damage: 125,
         pierce: 6,
+        damageIncrease: 75
       }
       this.weapon2 = {
         fireRate: 1750,
         damage: 50,
         pierce: 1,
+        damageIncrease: 20
       }
       this.weapon3 = {
         fireRate: 4000,
         damage: 200,
-        pierce: 5
+        pierce: 5,
+        radius: 50,
+        damageIncrease: 100
       }
     }
 
@@ -84,7 +89,7 @@ function PhaserTest() {
       this.input.on('pointerdown', (pointer) => {
         if(!this.fireRateForWepaon){
           this.fireRateChange();
-          if(this.block.customData.currentWeapon == 0){
+          if(this.block.customData.currentWeapon === 0){
             const projectile = this.projectiles.create(
               this.block.x,
               this.block.y,
@@ -99,7 +104,7 @@ function PhaserTest() {
             projectile.setCollideWorldBounds(true);
             projectile.body.onWorldBounds = true;
           }
-          if(this.block.customData.currentWeapon == 1){
+          if(this.block.customData.currentWeapon === 1){
             const projectile = this.projectiles.create(
               this.block.x,
               this.block.y,
@@ -109,6 +114,51 @@ function PhaserTest() {
               pointer.worldX - this.block.x,
               pointer.worldY - this.block.y
             ).normalize().scale(900);
+            projectile.setVelocity(velocity.x, velocity.y);
+            projectile.customData = this[`weapon${this.block.customData.currentWeapon}`];
+            projectile.setCollideWorldBounds(true);
+            projectile.body.onWorldBounds = true;
+          }
+          if(this.block.customData.currentWeapon === 2){
+            const velocity = new Phaser.Math.Vector2(
+                pointer.worldX - this.block.x,
+                pointer.worldY - this.block.y
+            ).normalize().scale(600);
+
+            // Define spread angles for the shotgun projectiles
+            const spreadAngles = [-0.2, -0.1, 0.1, 0.2];
+
+            // Iterate over each spread angle
+            for (let i = 0; i < spreadAngles.length; i++) {
+                const spreadVelocity = velocity.clone().rotate(spreadAngles[i]);
+
+                // Create a projectile for each spread angle
+                const projectile = this.projectiles.create(
+                    this.block.x,
+                    this.block.y,
+                    'projectile'
+                );
+                projectile.setVelocity(spreadVelocity.x, spreadVelocity.y);
+                projectile.customData = this[`weapon${this.block.customData.currentWeapon}`];
+                projectile.setCollideWorldBounds(true);
+
+                // Set up world bounds collision
+                projectile.body.onWorldBounds = true;
+                projectile.body.world.on('worldbounds', () => {
+                    projectile.destroy();
+                });
+            }
+          }
+          if(this.block.customData.currentWeapon === 3){
+            const projectile = this.projectiles.create(
+              this.block.x,
+              this.block.y,
+              'projectile'
+            );
+            const velocity = new Phaser.Math.Vector2(
+              pointer.worldX - this.block.x,
+              pointer.worldY - this.block.y
+            ).normalize().scale(300);
             projectile.setVelocity(velocity.x, velocity.y);
             projectile.customData = this[`weapon${this.block.customData.currentWeapon}`];
             projectile.setCollideWorldBounds(true);
@@ -203,27 +253,32 @@ function PhaserTest() {
     }
     projectileEnemyCollision(projectile, enemy) {
       projectile.customData.pierce--;
-      if (projectile.customData.pierce === 0) {
-        projectile.destroy();
-      }
-      // Destroy the projectile
-      enemy.customData.health -= projectile.customData.damage; // Reduce enemy health
-      if (enemy.customData.health <= 0) {
-        enemy.destroy();
-        this.block.customData.exp += enemy.customData.exp;
-        if (this.block.customData.exp >= 100 * this.block.customData.level) {
-          const remainingExp =
-            this.block.customData.exp - 100 * this.block.customData.level;
-          this.block.customData.level++;
-          this.block.customData.exp = remainingExp; // Update exp with remaining exp
-          console.log('Level: ' + level);
-          this.scene.pause();
-          setPaused(true);
+      if (projectile.customData.pierce <= 0) {
+        if(this.block.customData.currentWeapon !== 3){
+          projectile.destroy();
+        }else{
+          this.destroyProjectileAndApplyAOE(projectile);
         }
-        if (this.enemies.getChildren().length === 0) {
-          // Start a new wave
-          this.currentWave++;
-          this.startNewWave();
+      }
+      if(this.block.customData.currentWeapon !== 3){
+        enemy.customData.health -= projectile.customData.damage; // Reduce enemy health
+        if (enemy.customData.health <= 0) {
+          enemy.destroy();
+          this.block.customData.exp += enemy.customData.exp;
+          if (this.block.customData.exp >= 100 * this.block.customData.level) {
+            const remainingExp =
+              this.block.customData.exp - 100 * this.block.customData.level;
+            this.block.customData.level++;
+            this.block.customData.exp = remainingExp; // Update exp with remaining exp
+            console.log('Level: ' + level);
+            this.scene.pause();
+            setPaused(true);
+          }
+          if (this.enemies.getChildren().length === 0) {
+            // Start a new wave
+            this.currentWave++;
+            this.startNewWave();
+          }
         }
       }
     }
@@ -257,17 +312,52 @@ function PhaserTest() {
     upgradePlayer(option){
       if(option === "speed")this.block.customData.speed += .1;
       if(option === "health")this.block.customData.maxHealth += 10;
-      if(option === "pierce")this.block.customData.pierce += 1;
+      if(option === "pierce")
+        this[`weapon${this.block.customData.currentWeapon}`].pierce += 1;
+      if(option === "damage")
+        this[`weapon${this.block.customData.currentWeapon}`].damage +=
+        this[`weapon${this.block.customData.currentWeapon}`].damageIncrease;
+      if(option === "fire-rate")
+        this[`weapon${this.block.customData.currentWeapon}`].fireRate += 50
       this.scene.resume();
       setPaused(false);
-      setLevel(this.block.customData.level);
-      console.log(level);
     }
     changeWeapon(option){
       this.block.customData.currentWeapon = option;
       this.scene.resume();
       setPaused(false);
       setLevel((prev) => prev++);
+    }
+    destroyProjectileAndApplyAOE(projectile){
+      projectile.destroy();
+      const enemiesInRange = this.enemies.getChildren().filter((enemy) => {
+        console.log(Phaser.Math.Distance.Between(projectile.x, projectile.y, enemy.x, enemy.y));
+          return Phaser.Math.Distance.Between(projectile.x, projectile.y, enemy.x, enemy.y) <= this.weapon3.radius;
+      });
+      console.log(enemiesInRange);
+      enemiesInRange.forEach((enemy) => {
+        console.log(enemy)
+        console.log(projectile.customData.damage)
+        enemy.customData.health -= projectile.customData.damage;
+        if (enemy.customData.health <= 0) {
+          enemy.destroy();
+          this.block.customData.exp += enemy.customData.exp;
+          if (this.block.customData.exp >= 100 * this.block.customData.level) {
+            const remainingExp =
+              this.block.customData.exp - 100 * this.block.customData.level;
+            this.block.customData.level++;
+            this.block.customData.exp = remainingExp; // Update exp with remaining exp
+            console.log('Level: ' + level);
+            this.scene.pause();
+            setPaused(true);
+          }
+          if (this.enemies.getChildren().length === 0) {
+            // Start a new wave
+            this.currentWave++;
+            this.startNewWave();
+          }
+        }
+      });
     }
     update(time, delta) {
       if(this.block.customData.health < this.block.customData.maxHealth)
@@ -293,9 +383,28 @@ function PhaserTest() {
           enemy.setVelocity(velocity.x, velocity.y);
         });
         this.projectiles.children.iterate((projectile) => {
-          if (projectile.body.onWorldBounds) {
-            if (projectile.body.checkWorldBounds()) {
-              projectile.destroy();
+          if(this.block.customData.currentWeapon === 3){
+            const MAX_DISTANCE = 200;
+            const distanceTraveled = Phaser.Math.Distance.Between(
+                this.block.x,
+                this.block.y,
+                projectile.x,
+                projectile.y
+            );
+            if (distanceTraveled > MAX_DISTANCE) {
+                this.destroyProjectileAndApplyAOE(projectile);
+            }else{
+              if (projectile.body.onWorldBounds) {
+                if (projectile.body.checkWorldBounds()) {
+                  projectile.destroy();
+                }
+              }
+            }
+          }else{
+            if (projectile.body.onWorldBounds) {
+              if (projectile.body.checkWorldBounds()) {
+                projectile.destroy();
+              }
             }
           }
         })
@@ -357,8 +466,11 @@ function PhaserTest() {
       {paused && game.scene.scenes[0].block.customData.level > 2 ? (<div>
         <button onClick={() => upgradePlayer("speed")}>Speed</button>
         <button onClick={() => upgradePlayer("health")}>Health</button>
+        <button onClick={() => upgradePlayer("damage")}>Damage</button>
         <button onClick={() => upgradePlayer("pierce")}>Pierce</button>
+        <button onClick={() => upgradePlayer("fire-rate")}>Fire rate</button>
       </div>) : paused ? (<div>
+        <button onClick={() => changeWeapon(0)}>Keep same weapon</button>
         <button onClick={() => changeWeapon(1)}>Sniper</button>
         <button onClick={() => changeWeapon(2)}>Shotgun</button>
         <button onClick={() => changeWeapon(3)}>Grenade Launcher</button>
