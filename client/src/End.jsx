@@ -3,10 +3,10 @@ import { SiteContent, SiteContext } from './SiteContent'
 import { useNavigate } from "react-router";
 
 const End = () => {
-    const {score} = useContext(SiteContext);
+    const {score, game} = useContext(SiteContext);
     const [form, setForm] = useState({
         name: "",
-        score: score,
+        score: "",
     });
     const navigate = useNavigate();
     function updateForm(value) {
@@ -16,6 +16,8 @@ const End = () => {
     }
     async function submitScore(e) {
         e.preventDefault();
+        console.log(game);
+        // updateForm({score: Math.ceil(game.scene.scenes[0].block.customData.score * difficulty)});
         const leaderboardFetch = await fetch("http://localhost:5000/leaderboard/edit", {
             method: "PUT",
             headers: {"Content-Type": "application/json"},

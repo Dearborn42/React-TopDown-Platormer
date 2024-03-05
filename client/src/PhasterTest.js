@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { SiteContext } from './SiteContent';
+import React, { useEffect, useState } from 'react';
 import Phaser from 'phaser';
 import player from './images/player.png';
 import eBasic from './images/enemyBasic.png';
@@ -19,11 +18,19 @@ import speedI from './images/speedIcon.png';
 
 function PhaserTest() {
   const navigate = useNavigate();
-  const {setScore} = useContext(SiteContext);
+  const [game, setGame] = useState(null);
   const [difficulty, setDifficulty] = useState(null);
   const [paused, setPaused] = useState(false);
-  const [game, setGame] = useState(null);
   const [level, setLevel] = useState(1);
+  const [form, setForm] = useState({
+        name: "",
+        score: "",
+    });
+    function updateForm(value) {
+        return setForm((prev) => {
+            return { ...prev, ...value };
+        }); 
+    }
   class Example extends Phaser.Scene {
     constructor() {
       super({
@@ -47,6 +54,7 @@ function PhaserTest() {
       this.iframe = false;
       this.fireRateForWepaon = false;
       this.healthRegenRate = false;
+      this.difficulty = 0;
       this.weapon0 = {
         fireRate: 1000,
         damage: 75,
@@ -98,6 +106,7 @@ function PhaserTest() {
         pierce: 2,
         regen: 2,
         currentWeapon: 0,
+        death: false,
       };
       this.nextExp = 100 * this.block.customData.level;
       this.healthBarBackground = this.add.rectangle(
@@ -369,8 +378,7 @@ function PhaserTest() {
             this.block.customData.level++;
             this.nextExp = 100 * this.block.customData.level
             this.block.customData.exp = remainingExp; 
-            this.block.customData.score += 1;
-            console.log('Level: ' + level);
+            this.block.customData.score += 1 * difficulty;
             this.scene.pause();
             setPaused(true);
           }
@@ -404,13 +412,11 @@ function PhaserTest() {
         if (block.customData.health > 0) {
           block.customData.health -= enemy.customData.damage;
           if (block.customData.health <= 0) {
-            setScore(Math.ceil(this.block.customData.score * difficulty))
-            navigate("/leader")
+            this.block.customData.death = true;
           }
         } else if (block.customData.health <= 0) {
-          setScore(Math.ceil(this.block.customData.score * difficulty))
-          navigate("/leader")
-        }
+          this.block.customData.death = true;
+        } 
         this.time.delayedCall(500, this.iframeChange, [], this);
       }
     }
@@ -463,7 +469,7 @@ function PhaserTest() {
             this.block.customData.level++;
             this.nextExp = 100 * this.block.customData.level
             this.block.customData.exp = remainingExp;
-            this.block.customData.score += 1;
+            this.block.customData.score += 1 * difficulty;
             console.log('Level: ' + level);
             this.scene.pause();
             setPaused(true);
@@ -593,7 +599,27 @@ function PhaserTest() {
   }
   function changeWeapon(option) {
     if (game !== null) {
+      console.log(game);
       game.scene.scenes[0].changeWeapon(option);
+    }
+  }
+  async function submitScore(e) {
+    if(game){
+      e.preventDefault();
+      updateForm({score: game.scene.scenes[0].block.customData.score});
+      const leaderboardFetch = await fetch("http://localhost:5000/leaderboard/edit", {
+          method: "PUT",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(form),
+      });
+      console.log(form);
+      const leaderboard_response = await leaderboardFetch.json();
+      if(leaderboard_response.success){
+          navigate("/");
+      }else{
+          console.log(form);
+          console.log(leaderboard_response.error);
+      }
     }
   }
 
@@ -603,7 +629,7 @@ function PhaserTest() {
       <button onClick={() => setDifficulty(1.5)}>Medium</button>
       <button onClick={() => setDifficulty(2)}>Hard</button>
     </div>
-  ) : (
+  ) : ( game && game.scene && game.scene.scenes[0] && !game.scene.scenes[0].block.customData.death ? (
     <div id='phaser-game'>
       {paused && game.scene.scenes[0].block.customData.level > 2 ? (
         <div>
@@ -660,7 +686,14 @@ function PhaserTest() {
           </button>
         </div>
       ) : null}
-    </div>
+    </div>) : game && game.scene && game.scene.scenes[0] && game.scene.scenes[0].block.customData.death ? (
+       <div id='diff'>
+        <form onSubmit={submitScore}>
+          <input type="text" name="name" id="name" onChange={(e) => updateForm({name: e.target.value})}/>
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    ): null
   );
 }
 
