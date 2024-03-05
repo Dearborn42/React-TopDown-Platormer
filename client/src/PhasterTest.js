@@ -7,6 +7,7 @@ import eTank from "./images/enemyTank.png";
 function PhaserTest() {
   const [paused, setPaused] = useState(false);
   const [game, setGame] = useState(null);
+  const [level, setLevel] = useState(1);
   class Example extends Phaser.Scene {
     constructor() {
       super({
@@ -28,6 +29,27 @@ function PhaserTest() {
       this.healthBar = null;
       this.timedEvent = null;
       this.iframe = false;
+      this.fireRateForWepaon = false;
+      this.weapon0 = {
+        fireRate: 1000,
+        damage: 75,
+        pierce: 2,
+      }
+      this.weapon1 = {
+        fireRate: 3000,
+        damage: 125,
+        pierce: 6,
+      }
+      this.weapon2 = {
+        fireRate: 1750,
+        damage: 50,
+        pierce: 1,
+      }
+      this.weapon3 = {
+        fireRate: 4000,
+        damage: 200,
+        pierce: 5
+      }
     }
 
     preload() {
@@ -50,6 +72,7 @@ function PhaserTest() {
         exp: 0,
         pierce: 2,
         regen: 2,
+        currentWeapon: 0,
       };
       this.healthBarBackground = 
         this.add.rectangle(this.block.x - 100, this.block.y - 30, 200, 20, 0xe74c3c);
@@ -59,24 +82,40 @@ function PhaserTest() {
       this.healthBarBackground.setOrigin(0);
 
       this.input.on('pointerdown', (pointer) => {
-          const projectile = this.projectiles.create(
-            this.block.x,
-            this.block.y,
-            'projectile'
-          );
-
-          const velocity = new Phaser.Math.Vector2(
-            pointer.worldX - this.block.x,
-            pointer.worldY - this.block.y
-          )
-            .normalize()
-            .scale(400);
-
-          projectile.setVelocity(velocity.x, velocity.y);
-          projectile.customData = {
-            damage: 75 * this.block.customData.level,
-            pierce: this.block.customData.pierce,
-          };
+        if(!this.fireRateForWepaon){
+          this.fireRateChange();
+          if(this.block.customData.currentWeapon == 0){
+            const projectile = this.projectiles.create(
+              this.block.x,
+              this.block.y,
+              'projectile'
+            );
+            const velocity = new Phaser.Math.Vector2(
+              pointer.worldX - this.block.x,
+              pointer.worldY - this.block.y
+            ).normalize().scale(400);
+            projectile.setVelocity(velocity.x, velocity.y);
+            projectile.customData = this[`weapon${this.block.customData.currentWeapon}`];
+            projectile.setCollideWorldBounds(true);
+            projectile.body.onWorldBounds = true;
+          }
+          if(this.block.customData.currentWeapon == 1){
+            const projectile = this.projectiles.create(
+              this.block.x,
+              this.block.y,
+              'projectile'
+            );
+            const velocity = new Phaser.Math.Vector2(
+              pointer.worldX - this.block.x,
+              pointer.worldY - this.block.y
+            ).normalize().scale(900);
+            projectile.setVelocity(velocity.x, velocity.y);
+            projectile.customData = this[`weapon${this.block.customData.currentWeapon}`];
+            projectile.setCollideWorldBounds(true);
+            projectile.body.onWorldBounds = true;
+          }
+          this.time.delayedCall(this[`weapon${this.block.customData.currentWeapon}`].fireRate, this.fireRateChange, [], this);
+        }
       });
       this.physics.world.setBoundsCollision(true, true, true, true);
 
@@ -137,7 +176,6 @@ function PhaserTest() {
       const numOfEnemies = Math.ceil(
         this.gameInfo.numOfEnemies * Math.pow(1.5, this.currentWave - 1)
       );
-      console.log(numOfEnemies);
       // Create enemies for the current wave
       for (let i = 0; i < numOfEnemies; i++) {
         const x = Phaser.Math.Between(
@@ -172,14 +210,13 @@ function PhaserTest() {
       enemy.customData.health -= projectile.customData.damage; // Reduce enemy health
       if (enemy.customData.health <= 0) {
         enemy.destroy();
-        console.log('Enemies: ' + this.enemies.getChildren().length);
         this.block.customData.exp += enemy.customData.exp;
         if (this.block.customData.exp >= 100 * this.block.customData.level) {
           const remainingExp =
             this.block.customData.exp - 100 * this.block.customData.level;
-          this.block.customData.level++; // Increase player level
+          this.block.customData.level++;
           this.block.customData.exp = remainingExp; // Update exp with remaining exp
-          console.log('Level: ' + this.block.customData.level);
+          console.log('Level: ' + level);
           this.scene.pause();
           setPaused(true);
         }
@@ -202,6 +239,9 @@ function PhaserTest() {
     iframeChange(){
       this.iframe = !this.iframe;
     }
+    fireRateChange(){
+      this.fireRateForWepaon = !this.fireRateForWepaon
+    }
     enemyPlayerCollision(block, enemy){
       if(!this.iframe){
         this.iframeChange();
@@ -211,7 +251,7 @@ function PhaserTest() {
         else if(block.customData.health<=0){
           block.customData.health =0;
         }
-        this.time.delayedCall(1000, this.iframeChange, [], this);
+        this.time.delayedCall(500, this.iframeChange, [], this);
       }
     }
     upgradePlayer(option){
@@ -220,6 +260,14 @@ function PhaserTest() {
       if(option === "pierce")this.block.customData.pierce += 1;
       this.scene.resume();
       setPaused(false);
+      setLevel(this.block.customData.level);
+      console.log(level);
+    }
+    changeWeapon(option){
+      this.block.customData.currentWeapon = option;
+      this.scene.resume();
+      setPaused(false);
+      setLevel((prev) => prev++);
     }
     update(time, delta) {
       if(this.block.customData.health < this.block.customData.maxHealth)
@@ -244,6 +292,13 @@ function PhaserTest() {
             .scale(enemy.customData.speed);
           enemy.setVelocity(velocity.x, velocity.y);
         });
+        this.projectiles.children.iterate((projectile) => {
+          if (projectile.body.onWorldBounds) {
+            if (projectile.body.checkWorldBounds()) {
+              projectile.destroy();
+            }
+          }
+        })
 
         const pointer = this.input.mousePointer;
         const distance = Phaser.Math.Distance.Between(
@@ -282,7 +337,6 @@ function PhaserTest() {
   useEffect(() => {
     const phaserGame = new Phaser.Game(config);
     setGame(phaserGame);
-
     return () => {
       phaserGame.destroy(true);
     };
@@ -292,13 +346,23 @@ function PhaserTest() {
       game.scene.scenes[0].upgradePlayer(option);
     }
   }
+  function changeWeapon(option){
+    if(game !== null){
+      game.scene.scenes[0].changeWeapon(option);
+    }
+  }
+  
    return (
     <div id='phaser-game'>
-      {paused ? (<div>
+      {paused && game.scene.scenes[0].block.customData.level > 2 ? (<div>
         <button onClick={() => upgradePlayer("speed")}>Speed</button>
         <button onClick={() => upgradePlayer("health")}>Health</button>
         <button onClick={() => upgradePlayer("pierce")}>Pierce</button>
-      </div>) : null}
+      </div>) : paused ? (<div>
+        <button onClick={() => changeWeapon(1)}>Sniper</button>
+        <button onClick={() => changeWeapon(2)}>Shotgun</button>
+        <button onClick={() => changeWeapon(3)}>Grenade Launcher</button>
+      </div>): null}
     </div>
   );
 }
