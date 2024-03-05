@@ -52,7 +52,7 @@ function PhaserTest() {
         fireRate: 4000,
         damage: 200,
         pierce: 5,
-        radius: 50,
+        radius: 100,
         damageIncrease: 100
       }
     }
@@ -340,6 +340,9 @@ function PhaserTest() {
         this[`weapon${this.block.customData.currentWeapon}`].damageIncrease;
       if(option === "fire-rate")
         this[`weapon${this.block.customData.currentWeapon}`].fireRate += 50
+      if(option === "shots"){
+        
+      }
       this.scene.resume();
       setPaused(false);
     }
@@ -355,10 +358,7 @@ function PhaserTest() {
         console.log(Phaser.Math.Distance.Between(projectile.x, projectile.y, enemy.x, enemy.y));
           return Phaser.Math.Distance.Between(projectile.x, projectile.y, enemy.x, enemy.y) <= this.weapon3.radius;
       });
-      console.log(enemiesInRange);
       enemiesInRange.forEach((enemy) => {
-        console.log(enemy)
-        console.log(projectile.customData.damage)
         enemy.customData.health -= projectile.customData.damage;
         if (enemy.customData.health <= 0) {
           enemy.destroy();
@@ -438,25 +438,11 @@ function PhaserTest() {
           pointer.worldY
         );
         const angle = Phaser.Math.Angle.Between(
-          enemy.x,
-          enemy.y,
           this.block.x,
-          this.block.y
+          this.block.y,
+          pointer.worldX,
+          pointer.worldY,
         );
-        const velocity = new Phaser.Math.Vector2(
-          Math.cos(angle),
-          Math.sin(angle)
-        )
-          .normalize()
-          .scale(enemy.customData.speed);
-        enemy.setVelocity(velocity.x, velocity.y);
-      this.projectiles.children.iterate((projectile) => {
-        if (projectile.body.onWorldBounds) {
-          if (projectile.body.checkWorldBounds()) {
-            projectile.destroy();
-          }
-        }
-      });
       this.block.rotation = angle + Math.PI / 2;
       const velocityX =
         Math.cos(angle) * distance * this.block.customData.speed;
@@ -503,7 +489,12 @@ function PhaserTest() {
         <button onClick={() => upgradePlayer("speed")}>Speed</button>
         <button onClick={() => upgradePlayer("health")}>Health</button>
         <button onClick={() => upgradePlayer("damage")}>Damage</button>
-        <button onClick={() => upgradePlayer("pierce")}>Pierce</button>
+        {game.scene.scenes[0].block.customData.currentWeapon <= 1 ? 
+          (<button onClick={() => upgradePlayer("pierce")}>Pierce</button>) :
+          game.scene.scenes[0].block.customData.currentWeapon === 2 ? 
+          (<button onClick={() => upgradePlayer("shots")}>Shots</button>) : 
+          (<button onClick={() => upgradePlayer("aoe")}>Blast radius</button>)
+        }
         <button onClick={() => upgradePlayer("fire-rate")}>Fire rate</button>
       </div>) : paused ? (<div>
         <button onClick={() => changeWeapon(0)}>Keep same weapon</button>
