@@ -46,7 +46,8 @@ function PhaserTest() {
         fireRate: 1750,
         damage: 50,
         pierce: 1,
-        damageIncrease: 20
+        damageIncrease: 20,
+        shots: 4,
       }
       this.weapon3 = {
         fireRate: 4000,
@@ -144,8 +145,11 @@ function PhaserTest() {
             ).normalize().scale(600);
 
             // Define spread angles for the shotgun projectiles
-            const spreadAngles = [-0.2, -0.1, 0.1, 0.2];
-
+            const spreadAngles = [];
+            for (let i = 0; i < this.weapon2.shots; i++) {
+                spreadAngles.push((i - (this.weapon2.shots - 1) / 2) * 0.1); // Adjust spread angle here
+            }
+            console.log(spreadAngles);
             // Iterate over each spread angle
             for (let i = 0; i < spreadAngles.length; i++) {
                 const spreadVelocity = velocity.clone().rotate(spreadAngles[i]);
@@ -340,9 +344,10 @@ function PhaserTest() {
         this[`weapon${this.block.customData.currentWeapon}`].damageIncrease;
       if(option === "fire-rate")
         this[`weapon${this.block.customData.currentWeapon}`].fireRate += 50
-      if(option === "shots"){
-        
-      }
+      if(option === "shots")
+        this[`weapon${this.block.customData.currentWeapon}`].shots += 1;
+      if(option === "aoe")
+        this[`weapon${this.block.customData.currentWeapon}`].radius += 25;
       this.scene.resume();
       setPaused(false);
     }
@@ -355,7 +360,6 @@ function PhaserTest() {
     destroyProjectileAndApplyAOE(projectile){
       projectile.destroy();
       const enemiesInRange = this.enemies.getChildren().filter((enemy) => {
-        console.log(Phaser.Math.Distance.Between(projectile.x, projectile.y, enemy.x, enemy.y));
           return Phaser.Math.Distance.Between(projectile.x, projectile.y, enemy.x, enemy.y) <= this.weapon3.radius;
       });
       enemiesInRange.forEach((enemy) => {
