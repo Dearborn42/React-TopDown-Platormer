@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
+import { SiteContext } from './SiteContent';
 import Phaser from 'phaser';
 import player from './images/player.png';
 import eBasic from './images/enemyBasic.png';
 import eTank from './images/enemyTank.png';
+import { useNavigate } from "react-router";
 
 function PhaserTest() {
+  const navigate = useNavigate();
+  const {setScore} = useContext(SiteContext);
   const [difficulty, setDifficulty] = useState(null);
   const [paused, setPaused] = useState(false);
   const [game, setGame] = useState(null);
@@ -322,7 +326,8 @@ function PhaserTest() {
               this.block.customData.exp - 100 * this.block.customData.level;
             this.block.customData.level++;
             this.nextExp = 100 * this.block.customData.level
-            this.block.customData.exp = remainingExp; // Update exp with remaining exp
+            this.block.customData.exp = remainingExp; 
+            this.block.customData.score += 1;
             console.log('Level: ' + level);
             this.scene.pause();
             setPaused(true);
@@ -355,8 +360,13 @@ function PhaserTest() {
         this.iframeChange();
         if (block.customData.health > 0) {
           block.customData.health -= enemy.customData.damage;
+          if (block.customData.health <= 0) {
+            setScore(Math.ceil(this.block.customData.score * difficulty))
+            navigate("/leader")
+          }
         } else if (block.customData.health <= 0) {
-          block.customData.health = 0;
+          setScore(Math.ceil(this.block.customData.score * difficulty))
+          navigate("/leader")
         }
         this.time.delayedCall(500, this.iframeChange, [], this);
       }
@@ -402,7 +412,8 @@ function PhaserTest() {
               this.block.customData.exp - 100 * this.block.customData.level;
             this.block.customData.level++;
             this.nextExp = 100 * this.block.customData.level
-            this.block.customData.exp = remainingExp; // Update exp with remaining exp
+            this.block.customData.exp = remainingExp;
+            this.block.customData.score += 1;
             console.log('Level: ' + level);
             this.scene.pause();
             setPaused(true);

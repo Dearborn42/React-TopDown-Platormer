@@ -23,7 +23,7 @@ export async function editLeaderboard(req, res) {
         return res.status(200).json({ success: true, leaderboard });
       }
     }
-    return res.status(200).json({ success: false, leaderboard });
+    return res.status(200).json({ success: true });
   } catch (error) {
     return res.status(505).json({ success: false, error: error.message });
   }
