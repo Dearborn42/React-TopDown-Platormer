@@ -14,7 +14,7 @@ function PhaserTest() {
       super({
         physics: {
           arcade: {
-            debug: true,
+            debug: false,
           },
         },
       });
@@ -508,7 +508,7 @@ function PhaserTest() {
     parent: 'phaser-example',
     physics: {
       default: 'arcade',
-      arcade: { debug: true },
+      arcade: { debug: false },
     },
     scene: Example,
   };
