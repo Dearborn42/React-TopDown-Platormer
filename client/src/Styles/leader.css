@@ -11,7 +11,39 @@ body{
     font-family: pixel;
     src: url("./upheavtt.ttf");
 }
-h1{
-    color: white !important;
+#title{
+    color: white ;
     font-family: pixel;
+}
+#lead{
+    background-color: rgba(0, 0, 0, .4);
+    width: 50%;
+    margin: auto;
+    margin-top: 2rem;
+    text-align: center;
+    padding: 2rem;
+}
+#lead h3{
+    color: white ;
+        font-family: pixel;
+}
+#lead div{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#lead a{
+    font-size: 1.5rem;
+    color: black;
+    background-color: white;
+    padding: .5rem 1rem;
+    font-family: pixel;
+    text-decoration: none;
+    margin: 1rem;
+}
+#lead p{
+    color: white;
+        font-family: pixel;
+        font-size: 1.5rem;
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PhaserTest from './PhasterTest';
-import "./Styles/main.css"
+import './Styles/main.css';
 
 function App() {
   return (

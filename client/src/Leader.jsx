@@ -12,8 +12,12 @@ const Leader = () => {
                 const arr = Object.values(data.data)
                 arr.pop()
                 arr.pop()
-                console.log(arr)
-                setLeaderboard(arr)
+                const arr2 =arr.filter((e,i)=>{
+                    if(i<10){
+                        return e
+                    }
+                })
+                setLeaderboard(arr2)
                 // .map((e) => ( { [e[0]]: e[1] } ));
             } catch (error) {
                 console.error(error);
@@ -22,17 +26,19 @@ const Leader = () => {
         fetcho();
     },[])
   return (
-    <>
-        <h1>Leaderboard</h1>
+    <div id='lead'>
+        <h1 id='title'>Leaderboard</h1>
         <div>
             {leaderboard.map((e,i)=>{
                 return(
-                    <h3 key={i}>{e.playerName} - Score: {e.playerScore}</h3>
+                    <h3 key={i}>{i+1}. {e.playerName} - Score: {e.playerScore}</h3>
                 )
             })}
+            <a href="/game">Start</a>
+        <p>Mouse to move and aim. LMB to shoot.</p>
+
         </div>
-        <a href="/game">Start</a>
-    </>
+    </div>
   )
 }
 
