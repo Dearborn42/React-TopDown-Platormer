@@ -53,3 +53,8 @@ body{
     width: 16rem;
     height: 16rem;
 }
+.in{
+    border: none;
+        padding: .5rem 1rem;
+    font-size: 2rem;
+}

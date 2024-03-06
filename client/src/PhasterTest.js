@@ -3,8 +3,9 @@ import Phaser from 'phaser';
 import player from './images/player.png';
 import eBasic from './images/enemyBasic.png';
 import eTank from './images/enemyTank.png';
-import { useNavigate } from "react-router";
 import eFast from './images/enemyFast.png';
+import bgTile from './images/bgTile.png';
+import { useNavigate } from 'react-router';
 import pierceI from './images/pierceIcon.png';
 import dmgI from './images/dmgIcon.png';
 import healthI from './images/heartIcon.png';
@@ -15,7 +16,7 @@ import sniperI from './images/sniperIcon.png';
 import shotgunI from './images/shotgunIcon.png';
 import rateI from './images/rateIcon.png';
 import speedI from './images/speedIcon.png';
-
+import normalProj from './images/normalProj.png';
 function PhaserTest() {
   const navigate = useNavigate();
   const [game, setGame] = useState(null);
@@ -24,14 +25,14 @@ function PhaserTest() {
   const [level, setLevel] = useState(1);
   const [death, setDeath] = useState(false);
   const [form, setForm] = useState({
-        name: "",
-        score: "",
+    name: '',
+    score: '',
+  });
+  function updateForm(value) {
+    return setForm((prev) => {
+      return { ...prev, ...value };
     });
-    function updateForm(value) {
-        return setForm((prev) => {
-            return { ...prev, ...value };
-        }); 
-    }
+  }
   class Example extends Phaser.Scene {
     constructor() {
       super({
@@ -60,13 +61,13 @@ function PhaserTest() {
       this.weapon0 = {
         fireRate: 1000,
         damage: 75,
-        pierce: 2,
+        pierce: 1,
         damageIncrease: 35,
       };
       this.weapon1 = {
         fireRate: 3000,
         damage: 125,
-        pierce: 6,
+        pierce: 999999,
         damageIncrease: 75,
       };
       this.weapon2 = {
@@ -79,7 +80,7 @@ function PhaserTest() {
       this.weapon3 = {
         fireRate: 4000,
         damage: 200,
-        pierce: 5,
+        pierce: 999999,
         radius: 100,
         damageIncrease: 100,
       };
@@ -87,11 +88,22 @@ function PhaserTest() {
 
     preload() {
       this.load.image('block', player);
-      this.load.image('projectile', 'assets/sprites/projectile.png');
+      this.load.image('projectile', normalProj);
       this.load.image('enemy', eBasic);
+      this.load.image('enemyFast', eFast);
+      this.load.image('enemyTank', eTank);
+      this.load.image('bgTile', bgTile);
     }
 
     create() {
+      const background = this.add.tileSprite(
+        0,
+        0,
+        this.game.config.width,
+        this.game.config.height,
+        'bgTile'
+      );
+      background.setOrigin(0, 0);
       this.block = this.physics.add
         .sprite(400, 300, 'block')
         .setCollideWorldBounds(true);
@@ -162,12 +174,13 @@ function PhaserTest() {
               this.block.y,
               'projectile'
             );
+            projectile.setScale(0.3);
             const velocity = new Phaser.Math.Vector2(
               pointer.worldX - this.block.x,
               pointer.worldY - this.block.y
             )
               .normalize()
-              .scale(400);
+              .scale(600);
             projectile.setVelocity(velocity.x, velocity.y);
             projectile.customData =
               this[`weapon${this.block.customData.currentWeapon}`];
@@ -180,12 +193,13 @@ function PhaserTest() {
               this.block.y,
               'projectile'
             );
+            projectile.setScale(0.3);
             const velocity = new Phaser.Math.Vector2(
               pointer.worldX - this.block.x,
               pointer.worldY - this.block.y
             )
               .normalize()
-              .scale(900);
+              .scale(1000);
             projectile.setVelocity(velocity.x, velocity.y);
             projectile.customData =
               this[`weapon${this.block.customData.currentWeapon}`];
@@ -215,6 +229,8 @@ function PhaserTest() {
                 this.block.y,
                 'projectile'
               );
+              projectile.setScale(0.3);
+
               projectile.setVelocity(spreadVelocity.x, spreadVelocity.y);
               projectile.customData =
                 this[`weapon${this.block.customData.currentWeapon}`];
@@ -233,12 +249,14 @@ function PhaserTest() {
               this.block.y,
               'projectile'
             );
+            projectile.setScale(0.6);
+
             const velocity = new Phaser.Math.Vector2(
               pointer.worldX - this.block.x,
               pointer.worldY - this.block.y
             )
               .normalize()
-              .scale(300);
+              .scale(400);
             projectile.setVelocity(velocity.x, velocity.y);
             projectile.customData =
               this[`weapon${this.block.customData.currentWeapon}`];
@@ -339,20 +357,39 @@ function PhaserTest() {
         );
         const spawn = Math.round(Math.random(0, 1));
         const spawn2 = Math.round(Math.random(0, 1));
-        const enemy = this.enemies.create(
-          spawn ? xR : xL,
-          spawn2 ? yT : yB,
-          'enemy'
-        );
-        enemy.setCollideWorldBounds(false);
-        enemy.setScale(0.2, 0.2);
+
         // Set custom data for different types of enemies
-        if (i <= 15)
-          enemy.customData = { health: 75, speed: 250, damage: 30, exp: 20 };
-        else if (i > 15 && i <= 25)
-          enemy.customData = { health: 125, speed: 200, damage: 50, exp: 50 };
-        else
-          enemy.customData = { health: 200, speed: 100, damage: 75, exp: 100 };
+        if (i <= Math.ceil(numOfEnemies * 0.6)) {
+          const enemy = this.enemies.create(
+            spawn ? xR : xL,
+            spawn2 ? yT : yB,
+            'enemy'
+          );
+          enemy.setCollideWorldBounds(false);
+          enemy.setScale(0.2, 0.2);
+          enemy.customData = { health: 150, speed: 200, damage: 50, exp: 30 };
+        } else if (
+          i > Math.ceil(numOfEnemies * 0.6) &&
+          i <= Math.ceil(numOfEnemies * 0.8)
+        ) {
+          const enemy = this.enemies.create(
+            spawn ? xR : xL,
+            spawn2 ? yT : yB,
+            'enemyFast'
+          );
+          enemy.setCollideWorldBounds(false);
+          enemy.setScale(0.2, 0.2);
+          enemy.customData = { health: 100, speed: 300, damage: 30, exp: 100 };
+        } else {
+          const enemy = this.enemies.create(
+            spawn ? xR : xL,
+            spawn2 ? yT : yB,
+            'enemyTank'
+          );
+          enemy.setCollideWorldBounds(false);
+          enemy.setScale(0.2, 0.2);
+          enemy.customData = { health: 400, speed: 100, damage: 100, exp: 250 };
+        }
       }
     }
     updateHealthBar(currentHealth, maxHealth) {
@@ -360,37 +397,40 @@ function PhaserTest() {
       this.healthBar.setSize(newWidth, 8);
     }
     projectileEnemyCollision(projectile, enemy) {
-      if(difficulty !== null){
-          projectile.customData.pierce--;
-          if (projectile.customData.pierce <= 0) {
-            if (this.block.customData.currentWeapon !== 3) {
-              projectile.destroy();
-            } else {
-              this.destroyProjectileAndApplyAOE(projectile);
-            }
-          }
+      if (difficulty !== null) {
+        projectile.customData.pierce--;
+        if (projectile.customData.pierce <= 0) {
           if (this.block.customData.currentWeapon !== 3) {
-            enemy.customData.health -= projectile.customData.damage; // Reduce enemy health
-            if (enemy.customData.health <= 0) {
-              enemy.destroy();
-              this.block.customData.score += (1 * difficulty);
-              this.block.customData.exp += enemy.customData.exp;
-              if (this.block.customData.exp >= 100 * this.block.customData.level) {
-                const remainingExp =
-                  this.block.customData.exp - 100 * this.block.customData.level;
-                this.block.customData.level++;
-                this.nextExp = 100 * this.block.customData.level
-                this.block.customData.exp = remainingExp; 
-                this.scene.pause();
-                setPaused(true);
-              }
-              if (this.enemies.getChildren().length === 0) {
-                // Start a new wave
-                this.currentWave++;
-                this.startNewWave();
-              }
+            projectile.destroy();
+          } else {
+            this.destroyProjectileAndApplyAOE(projectile);
+          }
+        }
+        if (this.block.customData.currentWeapon !== 3) {
+          enemy.customData.health -= projectile.customData.damage; // Reduce enemy health
+          if (enemy.customData.health <= 0) {
+            enemy.destroy();
+            this.block.customData.score += 1 * difficulty;
+            this.block.customData.exp += enemy.customData.exp;
+            if (
+              this.block.customData.exp >=
+              100 * this.block.customData.level
+            ) {
+              const remainingExp =
+                this.block.customData.exp - 100 * this.block.customData.level;
+              this.block.customData.level++;
+              this.nextExp = 100 * this.block.customData.level;
+              this.block.customData.exp = remainingExp;
+              this.scene.pause();
+              setPaused(true);
+            }
+            if (this.enemies.getChildren().length === 0) {
+              // Start a new wave
+              this.currentWave++;
+              this.startNewWave();
             }
           }
+        }
       }
     }
     checkCollisions() {
@@ -407,7 +447,6 @@ function PhaserTest() {
     }
     fireRateChange() {
       this.fireRateForWepaon = !this.fireRateForWepaon;
-      console.log(this.fireRateChange);
     }
     enemyPlayerCollision(block, enemy) {
       if (!this.iframe) {
@@ -415,7 +454,7 @@ function PhaserTest() {
         if (block.customData.health > 0) {
           block.customData.health -= enemy.customData.damage;
           if (block.customData.health <= 0) {
-            updateForm({score: Math.ceil(this.block.customData.score)})
+            updateForm({ score: Math.ceil(this.block.customData.score) });
             this.death = true;
             this.scene.pause();
             setDeath(true);
@@ -466,13 +505,13 @@ function PhaserTest() {
         enemy.customData.health -= projectile.customData.damage;
         if (enemy.customData.health <= 0) {
           enemy.destroy();
-          this.block.customData.score += (1 * difficulty);
+          this.block.customData.score += 1 * difficulty;
           this.block.customData.exp += enemy.customData.exp;
           if (this.block.customData.exp >= 100 * this.block.customData.level) {
             const remainingExp =
               this.block.customData.exp - 100 * this.block.customData.level;
             this.block.customData.level++;
-            this.nextExp = 100 * this.block.customData.level
+            this.nextExp = 100 * this.block.customData.level;
             this.block.customData.exp = remainingExp;
             this.scene.pause();
             setPaused(true);
@@ -565,6 +604,15 @@ function PhaserTest() {
         pointer.worldY
       );
       this.block.rotation = angle + Math.PI / 2;
+      this.enemies.children.iterate((enemy) => {
+        const angle = Phaser.Math.Angle.Between(
+          enemy.x,
+          enemy.y,
+          this.block.x,
+          this.block.y
+        );
+        enemy.rotation = angle + Math.PI / 2;
+      });
       const velocityX =
         Math.cos(angle) * distance * this.block.customData.speed;
       const velocityY =
@@ -607,22 +655,25 @@ function PhaserTest() {
     }
   }
   async function submitScore(e) {
-    if(game){
+    if (game) {
       e.preventDefault();
       console.log(game.scene.scenes[0].block.customData);
-      console.log(difficulty)
-      const leaderboardFetch = await fetch("http://localhost:5000/leaderboard/edit", {
-          method: "PUT",
-          headers: {"Content-Type": "application/json"},
+      console.log(difficulty);
+      const leaderboardFetch = await fetch(
+        'http://localhost:5000/leaderboard/edit',
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
-      });
+        }
+      );
       console.log(form);
       const leaderboard_response = await leaderboardFetch.json();
-      if(leaderboard_response.success){
-          navigate("/");
-      }else{
-          console.log(form);
-          console.log(leaderboard_response.error);
+      if (leaderboard_response.success) {
+        navigate('/');
+      } else {
+        console.log(form);
+        console.log(leaderboard_response.error);
       }
     }
   }
@@ -638,56 +689,56 @@ function PhaserTest() {
   //     {paused && game.scene.scenes[0].block.customData.level > 2 ? (
   //       <div>
   //         <button onClick={() => upgradePlayer('speed')}>
-  //           <img src={speedI} alt='' srcset='' />
+  //           <img src={speedI} alt=''   />
   //           Speed
   //         </button>
   //         <button onClick={() => upgradePlayer('health')}>
-  //           <img src={healthI} alt='' srcset='' />
+  //           <img src={healthI} alt=''   />
   //           Health
   //         </button>
   //         <button onClick={() => upgradePlayer('damage')}>
-  //           <img src={dmgI} alt='' srcset='' />
+  //           <img src={dmgI} alt=''   />
   //           Damage
   //         </button>
   //         {game.scene.scenes[0].block.customData.currentWeapon <= 1 ? (
   //           <button onClick={() => upgradePlayer('pierce')}>
-  //             <img src={pierceI} alt='' srcset='' />
+  //             <img src={pierceI} alt=''   />
   //             Pierce
   //           </button>
   //         ) : game.scene.scenes[0].block.customData.currentWeapon === 2 ? (
   //           <button onClick={() => upgradePlayer('shots')}>
-  //             <img src={shotgunI} alt='' srcset='' />
+  //             <img src={shotgunI} alt=''   />
   //             Shots
   //           </button>
   //         ) : (
   //           <button onClick={() => upgradePlayer('aoe')}>
-  //             <img src={grenadeI} alt='' srcset='' />
+  //             <img src={grenadeI} alt=''   />
   //             Blast radius
   //           </button>
   //         )}
   //         <button onClick={() => upgradePlayer('fire-rate')}>
-  //           <img src={rateI} alt='' srcset='' />
+  //           <img src={rateI} alt=''   />
   //           Fire rate
   //         </button>
   //       </div>
   //     ) : paused ? (
   //       <div>
-          // <button onClick={() => changeWeapon(0)}>
-          //   <img src={normalI} alt='' srcset='' />
-          //   Keep weapon
-          // </button>
-          // <button onClick={() => changeWeapon(1)}>
-          //   <img src={sniperI} alt='' srcset='' />
-          //   Sniper
-          // </button>
-          // <button onClick={() => changeWeapon(2)}>
-          //   <img src={shotgunI} alt='' srcset='' />
-          //   Shotgun
-          // </button>
-          // <button onClick={() => changeWeapon(3)}>
-          //   <img src={grenadeI} alt='' srcset='' />
-          //   Grenades
-          // </button>
+  // <button onClick={() => changeWeapon(0)}>
+  //   <img src={normalI} alt=''   />
+  //   Keep weapon
+  // </button>
+  // <button onClick={() => changeWeapon(1)}>
+  //   <img src={sniperI} alt=''   />
+  //   Sniper
+  // </button>
+  // <button onClick={() => changeWeapon(2)}>
+  //   <img src={shotgunI} alt=''   />
+  //   Shotgun
+  // </button>
+  // <button onClick={() => changeWeapon(3)}>
+  //   <img src={grenadeI} alt=''   />
+  //   Grenades
+  // </button>
   //       </div>
   //     ) : null}
   //   </div>) : game && game.scene && game.scene.scenes[0] && game.scene.scenes[0].block.customData.death ? (
@@ -714,55 +765,56 @@ function PhaserTest() {
           {paused && game.scene.scenes[0].block.customData.level > 2 ? (
             <div>
               <button onClick={() => upgradePlayer('speed')}>
-                <img src={speedI} alt='' srcset='' />
+                <img src={speedI} alt='' />
                 Speed
               </button>
               <button onClick={() => upgradePlayer('health')}>
-                <img src={healthI} alt='' srcset='' />
+                <img src={healthI} alt='' />
                 Health
               </button>
               <button onClick={() => upgradePlayer('damage')}>
-               <img src={dmgI} alt='' srcset='' />
-               Damage
+                <img src={dmgI} alt='' />
+                Damage
               </button>
               <button onClick={() => upgradePlayer('fire-rate')}>
-               <img src={rateI} alt='' srcset='' />
-               Fire rate
-             </button>{game.scene.scenes[0].block.customData.currentWeapon <= 1 ? (
-            <button onClick={() => upgradePlayer('pierce')}>
-              <img src={pierceI} alt='' srcset='' />
-              Pierce
-            </button>
-          ) : game.scene.scenes[0].block.customData.currentWeapon === 2 ? (
-            <button onClick={() => upgradePlayer('shots')}>
-              <img src={shotgunI} alt='' srcset='' />
-              Shots
-            </button>
-          ) : (
-            <button onClick={() => upgradePlayer('aoe')}>
-              <img src={grenadeI} alt='' srcset='' />
-              Blast radius
-            </button>
-          )}
+                <img src={rateI} alt='' />
+                Fire rate
+              </button>
+              {game.scene.scenes[0].block.customData.currentWeapon <= 1 ? (
+                <button onClick={() => upgradePlayer('pierce')}>
+                  <img src={pierceI} alt='' />
+                  Pierce
+                </button>
+              ) : game.scene.scenes[0].block.customData.currentWeapon === 2 ? (
+                <button onClick={() => upgradePlayer('shots')}>
+                  <img src={shotgunI} alt='' />
+                  Shots
+                </button>
+              ) : (
+                <button onClick={() => upgradePlayer('aoe')}>
+                  <img src={grenadeI} alt='' />
+                  Blast radius
+                </button>
+              )}
             </div>
           ) : paused ? (
             <div>
               <button onClick={() => changeWeapon(0)}>
-            <img src={normalI} alt='' srcset='' />
-            Keep weapon
-          </button>
-          <button onClick={() => changeWeapon(1)}>
-            <img src={sniperI} alt='' srcset='' />
-            Sniper
-          </button>
-          <button onClick={() => changeWeapon(2)}>
-            <img src={shotgunI} alt='' srcset='' />
-            Shotgun
-          </button>
-          <button onClick={() => changeWeapon(3)}>
-            <img src={grenadeI} alt='' srcset='' />
-            Grenades
-          </button>
+                <img src={normalI} alt='' />
+                Keep weapon
+              </button>
+              <button onClick={() => changeWeapon(1)}>
+                <img src={sniperI} alt='' />
+                Sniper
+              </button>
+              <button onClick={() => changeWeapon(2)}>
+                <img src={shotgunI} alt='' />
+                Shotgun
+              </button>
+              <button onClick={() => changeWeapon(3)}>
+                <img src={grenadeI} alt='' />
+                Grenades
+              </button>
             </div>
           ) : null}
         </div>
@@ -771,8 +823,15 @@ function PhaserTest() {
       {game && game.scene && game.scene.scenes[0] && death && (
         <div id='diff'>
           <form onSubmit={submitScore}>
-            <input type="text" name="name" id="name" onChange={(e) => updateForm({ name: e.target.value })} />
-            <button type="submit">Submit</button>
+            <h1>Name:</h1>
+            <input
+              className='in'
+              type='text'
+              name='name'
+              id='name'
+              onChange={(e) => updateForm({ name: e.target.value })}
+            />
+            <button type='submit'>Submit</button>
           </form>
         </div>
       )}
