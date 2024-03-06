@@ -22,6 +22,7 @@ function PhaserTest() {
   const [difficulty, setDifficulty] = useState(null);
   const [paused, setPaused] = useState(false);
   const [level, setLevel] = useState(1);
+  const [death, setDeath] = useState(false);
   const [form, setForm] = useState({
         name: "",
         score: "",
@@ -55,6 +56,7 @@ function PhaserTest() {
       this.fireRateForWepaon = false;
       this.healthRegenRate = false;
       this.difficulty = 0;
+      this.death = false;
       this.weapon0 = {
         fireRate: 1000,
         damage: 75,
@@ -106,7 +108,6 @@ function PhaserTest() {
         pierce: 2,
         regen: 2,
         currentWeapon: 0,
-        death: false,
       };
       this.nextExp = 100 * this.block.customData.level;
       this.healthBarBackground = this.add.rectangle(
@@ -359,35 +360,37 @@ function PhaserTest() {
       this.healthBar.setSize(newWidth, 8);
     }
     projectileEnemyCollision(projectile, enemy) {
-      projectile.customData.pierce--;
-      if (projectile.customData.pierce <= 0) {
-        if (this.block.customData.currentWeapon !== 3) {
-          projectile.destroy();
-        } else {
-          this.destroyProjectileAndApplyAOE(projectile);
-        }
-      }
-      if (this.block.customData.currentWeapon !== 3) {
-        enemy.customData.health -= projectile.customData.damage; // Reduce enemy health
-        if (enemy.customData.health <= 0) {
-          enemy.destroy();
-          this.block.customData.exp += enemy.customData.exp;
-          if (this.block.customData.exp >= 100 * this.block.customData.level) {
-            const remainingExp =
-              this.block.customData.exp - 100 * this.block.customData.level;
-            this.block.customData.level++;
-            this.nextExp = 100 * this.block.customData.level
-            this.block.customData.exp = remainingExp; 
-            this.block.customData.score += 1 * difficulty;
-            this.scene.pause();
-            setPaused(true);
+      if(difficulty !== null){
+          projectile.customData.pierce--;
+          if (projectile.customData.pierce <= 0) {
+            if (this.block.customData.currentWeapon !== 3) {
+              projectile.destroy();
+            } else {
+              this.destroyProjectileAndApplyAOE(projectile);
+            }
           }
-          if (this.enemies.getChildren().length === 0) {
-            // Start a new wave
-            this.currentWave++;
-            this.startNewWave();
+          if (this.block.customData.currentWeapon !== 3) {
+            enemy.customData.health -= projectile.customData.damage; // Reduce enemy health
+            if (enemy.customData.health <= 0) {
+              enemy.destroy();
+              this.block.customData.score += (1 * difficulty);
+              this.block.customData.exp += enemy.customData.exp;
+              if (this.block.customData.exp >= 100 * this.block.customData.level) {
+                const remainingExp =
+                  this.block.customData.exp - 100 * this.block.customData.level;
+                this.block.customData.level++;
+                this.nextExp = 100 * this.block.customData.level
+                this.block.customData.exp = remainingExp; 
+                this.scene.pause();
+                setPaused(true);
+              }
+              if (this.enemies.getChildren().length === 0) {
+                // Start a new wave
+                this.currentWave++;
+                this.startNewWave();
+              }
+            }
           }
-        }
       }
     }
     checkCollisions() {
@@ -412,11 +415,12 @@ function PhaserTest() {
         if (block.customData.health > 0) {
           block.customData.health -= enemy.customData.damage;
           if (block.customData.health <= 0) {
-            this.block.customData.death = true;
+            updateForm({score: Math.ceil(this.block.customData.score)})
+            this.death = true;
+            this.scene.pause();
+            setDeath(true);
           }
-        } else if (block.customData.health <= 0) {
-          this.block.customData.death = true;
-        } 
+        }
         this.time.delayedCall(500, this.iframeChange, [], this);
       }
     }
@@ -462,6 +466,7 @@ function PhaserTest() {
         enemy.customData.health -= projectile.customData.damage;
         if (enemy.customData.health <= 0) {
           enemy.destroy();
+          this.block.customData.score += (1 * difficulty);
           this.block.customData.exp += enemy.customData.exp;
           if (this.block.customData.exp >= 100 * this.block.customData.level) {
             const remainingExp =
@@ -469,8 +474,6 @@ function PhaserTest() {
             this.block.customData.level++;
             this.nextExp = 100 * this.block.customData.level
             this.block.customData.exp = remainingExp;
-            this.block.customData.score += 1 * difficulty;
-            console.log('Level: ' + level);
             this.scene.pause();
             setPaused(true);
           }
@@ -606,7 +609,8 @@ function PhaserTest() {
   async function submitScore(e) {
     if(game){
       e.preventDefault();
-      updateForm({score: game.scene.scenes[0].block.customData.score});
+      console.log(game.scene.scenes[0].block.customData);
+      console.log(difficulty)
       const leaderboardFetch = await fetch("http://localhost:5000/leaderboard/edit", {
           method: "PUT",
           headers: {"Content-Type": "application/json"},
@@ -623,52 +627,108 @@ function PhaserTest() {
     }
   }
 
-  return difficulty === null ? (
-    <div id='diff'>
-      <button onClick={() => setDifficulty(1.1)}>Easy</button>
-      <button onClick={() => setDifficulty(1.5)}>Medium</button>
-      <button onClick={() => setDifficulty(2)}>Hard</button>
-    </div>
-  ) : ( game && game.scene && game.scene.scenes[0] && !game.scene.scenes[0].block.customData.death ? (
-    <div id='phaser-game'>
-      {paused && game.scene.scenes[0].block.customData.level > 2 ? (
-        <div>
-          <button onClick={() => upgradePlayer('speed')}>
-            <img src={speedI} alt='' srcset='' />
-            Speed
-          </button>
-          <button onClick={() => upgradePlayer('health')}>
-            <img src={healthI} alt='' srcset='' />
-            Health
-          </button>
-          <button onClick={() => upgradePlayer('damage')}>
-            <img src={dmgI} alt='' srcset='' />
-            Damage
-          </button>
-          {game.scene.scenes[0].block.customData.currentWeapon <= 1 ? (
-            <button onClick={() => upgradePlayer('pierce')}>
-              <img src={pierceI} alt='' srcset='' />
-              Pierce
-            </button>
-          ) : game.scene.scenes[0].block.customData.currentWeapon === 2 ? (
-            <button onClick={() => upgradePlayer('shots')}>
-              <img src={shotgunI} alt='' srcset='' />
-              Shots
-            </button>
-          ) : (
-            <button onClick={() => upgradePlayer('aoe')}>
-              <img src={grenadeI} alt='' srcset='' />
-              Blast radius
-            </button>
-          )}
-          <button onClick={() => upgradePlayer('fire-rate')}>
-            <img src={rateI} alt='' srcset='' />
-            Fire rate
-          </button>
+  // return difficulty === null ? (
+  //   <div id='diff'>
+  //     <button onClick={() => setDifficulty(1.1)}>Easy</button>
+  //     <button onClick={() => setDifficulty(1.5)}>Medium</button>
+  //     <button onClick={() => setDifficulty(2)}>Hard</button>
+  //   </div>
+  // ) : ( game && game.scene && game.scene.scenes[0] && !game.scene.scenes[0].block.customData.death ? (
+  //   <div id='phaser-game'>
+  //     {paused && game.scene.scenes[0].block.customData.level > 2 ? (
+  //       <div>
+  //         <button onClick={() => upgradePlayer('speed')}>
+  //           <img src={speedI} alt='' srcset='' />
+  //           Speed
+  //         </button>
+  //         <button onClick={() => upgradePlayer('health')}>
+  //           <img src={healthI} alt='' srcset='' />
+  //           Health
+  //         </button>
+  //         <button onClick={() => upgradePlayer('damage')}>
+  //           <img src={dmgI} alt='' srcset='' />
+  //           Damage
+  //         </button>
+  //         {game.scene.scenes[0].block.customData.currentWeapon <= 1 ? (
+  //           <button onClick={() => upgradePlayer('pierce')}>
+  //             <img src={pierceI} alt='' srcset='' />
+  //             Pierce
+  //           </button>
+  //         ) : game.scene.scenes[0].block.customData.currentWeapon === 2 ? (
+  //           <button onClick={() => upgradePlayer('shots')}>
+  //             <img src={shotgunI} alt='' srcset='' />
+  //             Shots
+  //           </button>
+  //         ) : (
+  //           <button onClick={() => upgradePlayer('aoe')}>
+  //             <img src={grenadeI} alt='' srcset='' />
+  //             Blast radius
+  //           </button>
+  //         )}
+  //         <button onClick={() => upgradePlayer('fire-rate')}>
+  //           <img src={rateI} alt='' srcset='' />
+  //           Fire rate
+  //         </button>
+  //       </div>
+  //     ) : paused ? (
+  //       <div>
+          // <button onClick={() => changeWeapon(0)}>
+          //   <img src={normalI} alt='' srcset='' />
+          //   Keep weapon
+          // </button>
+          // <button onClick={() => changeWeapon(1)}>
+          //   <img src={sniperI} alt='' srcset='' />
+          //   Sniper
+          // </button>
+          // <button onClick={() => changeWeapon(2)}>
+          //   <img src={shotgunI} alt='' srcset='' />
+          //   Shotgun
+          // </button>
+          // <button onClick={() => changeWeapon(3)}>
+          //   <img src={grenadeI} alt='' srcset='' />
+          //   Grenades
+          // </button>
+  //       </div>
+  //     ) : null}
+  //   </div>) : game && game.scene && game.scene.scenes[0] && game.scene.scenes[0].block.customData.death ? (
+  //      <div id='diff'>
+  //       <form onSubmit={submitScore}>
+  //         <input type="text" name="name" id="name" onChange={(e) => updateForm({name: e.target.value})}/>
+  //         <button type="submit">Submit</button>
+  //       </form>
+  //     </div>
+  //   ): null
+  // );
+  return (
+    <>
+      {difficulty === null && (
+        <div id='diff'>
+          <button onClick={() => setDifficulty(1.1)}>Easy</button>
+          <button onClick={() => setDifficulty(1.5)}>Medium</button>
+          <button onClick={() => setDifficulty(2)}>Hard</button>
         </div>
-      ) : paused ? (
-        <div>
-          <button onClick={() => changeWeapon(0)}>
+      )}
+
+      {game && game.scene && game.scene.scenes[0] && !death && (
+        <div id='phaser-game'>
+          {paused && game.scene.scenes[0].block.customData.level > 2 ? (
+            <div>
+              <button onClick={() => upgradePlayer('speed')}>
+                <img src={speedI} alt='' srcset='' />
+                Speed
+              </button>
+              <button onClick={() => upgradePlayer('health')}>
+                <img src={healthI} alt='' srcset='' />
+                Health
+              </button>
+              <button onClick={() => upgradePlayer('damage')}>
+               <img src={dmgI} alt='' srcset='' />
+               Damage
+              </button>
+            </div>
+          ) : paused ? (
+            <div>
+              <button onClick={() => changeWeapon(0)}>
             <img src={normalI} alt='' srcset='' />
             Keep weapon
           </button>
@@ -684,16 +744,20 @@ function PhaserTest() {
             <img src={grenadeI} alt='' srcset='' />
             Grenades
           </button>
+            </div>
+          ) : null}
         </div>
-      ) : null}
-    </div>) : game && game.scene && game.scene.scenes[0] && game.scene.scenes[0].block.customData.death ? (
-       <div id='diff'>
-        <form onSubmit={submitScore}>
-          <input type="text" name="name" id="name" onChange={(e) => updateForm({name: e.target.value})}/>
-          <button type="submit">Submit</button>
-        </form>
-      </div>
-    ): null
+      )}
+
+      {game && game.scene && game.scene.scenes[0] && death && (
+        <div id='diff'>
+          <form onSubmit={submitScore}>
+            <input type="text" name="name" id="name" onChange={(e) => updateForm({ name: e.target.value })} />
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+      )}
+    </>
   );
 }
 
