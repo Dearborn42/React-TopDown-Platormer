@@ -725,6 +725,25 @@ function PhaserTest() {
                <img src={dmgI} alt='' srcset='' />
                Damage
               </button>
+              <button onClick={() => upgradePlayer('fire-rate')}>
+               <img src={rateI} alt='' srcset='' />
+               Fire rate
+             </button>{game.scene.scenes[0].block.customData.currentWeapon <= 1 ? (
+            <button onClick={() => upgradePlayer('pierce')}>
+              <img src={pierceI} alt='' srcset='' />
+              Pierce
+            </button>
+          ) : game.scene.scenes[0].block.customData.currentWeapon === 2 ? (
+            <button onClick={() => upgradePlayer('shots')}>
+              <img src={shotgunI} alt='' srcset='' />
+              Shots
+            </button>
+          ) : (
+            <button onClick={() => upgradePlayer('aoe')}>
+              <img src={grenadeI} alt='' srcset='' />
+              Blast radius
+            </button>
+          )}
             </div>
           ) : paused ? (
             <div>
